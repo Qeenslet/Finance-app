@@ -1,0 +1,12 @@
+{
+  "grocery": "Grocery",
+  "transport" : "Transport/Gas",
+  "rent" : "Rent/Bills",
+  "loan" : "Loans",
+  "eat" : "Eating out",
+  "apparel" : "Apparels",
+  "decor" : "House and decoration",
+  "show" : "Entertainment",
+  "travel" : "Travels",
+  "other" : "Other"
+}

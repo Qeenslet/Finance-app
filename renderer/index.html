@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Finance App</title>
+  <link rel="stylesheet" href="./bootstrap.min.css">
+</head>
+
+<body>
+<div class="container">
+  <h1 class="text-center">Balance for this month is <span id="monBal"></span></h1>
+  <div class="row">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h4 class="card-title">Your spents: <span id="total_spents"></span></h4>
+        </div>
+        <div class="card-body">
+          <ul id="spentsList" class="list-group"></ul>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h4 class="card-title">Your incomes: <span id="total_incomes"></span></h4>
+        </div>
+        <div class="card-body">
+          <ul id="incomesList" class="list-group"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-top: 10px">
+    <div class="card-header">
+      <div style="display: flex; flex-direction: row; justify-content: space-between">
+        <div>
+          <h4 class="card-title">Entries</h4>
+        </div>
+        <div>
+          <span style="text-align: right"><button id="createTodoBtn" type="button" class="btn btn-success">New</button></span>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div style="max-height: 400px; overflow: auto">
+        <table class="table">
+          <thead>
+          <tr>
+            <th scope="col">Date</th>
+            <th scope="col">Category</th>
+            <th scope="col">Description</th>
+            <th scope="col">Amt</th>
+            <th scope="col">Act</th>
+          </tr>
+          </thead>
+          <tbody id="entry_list"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script src="./index.js"></script>
+</body>
+
+</html>
