@@ -6,15 +6,13 @@
   "scripts": {
     "start": "electron ."
   },
-  "repository": "https://github.com/electron/electron-quick-start",
+  "repository": "https://github.com/Qeenslet/Finance-app",
   "keywords": [
     "Electron",
-    "quick",
-    "start",
-    "tutorial",
-    "demo"
+    "Home",
+    "budget"
   ],
-  "author": "GitHub",
+  "author": "Qeenslet",
   "license": "CC0-1.0",
   "dependencies": {
     "sqlite3": "^4.0.9"
