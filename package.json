@@ -1,20 +1,18 @@
 {
-  "name": "electron-quick-start",
+  "name": "finance-app",
   "version": "1.0.0",
   "description": "A minimal Electron application",
   "main": "main.js",
   "scripts": {
     "start": "electron ."
   },
-  "repository": "https://github.com/electron/electron-quick-start",
+  "repository": "https://github.com/Qeenslet/Finance-app",
   "keywords": [
     "Electron",
-    "quick",
-    "start",
-    "tutorial",
-    "demo"
+    "Home",
+    "budget"
   ],
-  "author": "GitHub",
+  "author": "Qeenslet",
   "license": "CC0-1.0",
   "dependencies": {
     "sqlite3": "^4.0.9"
