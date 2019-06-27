@@ -4,7 +4,9 @@
   "description": "A minimal Electron application",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "rebuild": "electron-rebuild -f -w sqlite3",
+    "postinstall": "electron-builder install-app-deps"
   },
   "repository": "https://github.com/Qeenslet/Finance-app",
   "keywords": [
@@ -18,6 +20,8 @@
     "sqlite3": "^4.0.9"
   },
   "devDependencies": {
-    "electron": "^5.0.5"
+    "electron": "^5.0.5",
+    "electron-builder": "^20.44.4",
+    "electron-rebuild": "^1.8.5"
   }
 }
