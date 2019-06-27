@@ -49,7 +49,11 @@ ipcRenderer.on('empty-categ', (event) => {
     const bal2 = document.getElementById(categoryZone2);
     bal2.innerHTML = '';
     const bal3 = document.getElementById(allList);
-    bal2.innerHTML = '';
+    bal3.innerHTML = '';
+    const total1 = document.getElementById('total_incomes');
+    total1.innerText = '';
+    const total2 = document.getElementById('total_spents');
+    total2.innerText = '';
 });
 /**
  * Display entries
