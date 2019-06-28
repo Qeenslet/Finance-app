@@ -87,7 +87,14 @@ ipcRenderer.on('all-list', (event, list, spentList, incomesList) => {
  * @param entryID
  */
 function deleteEntry(entryID) {
-    ipcRenderer.send('delete-entry', entryID);
+    const {dialog} = require('electron').remote;
+    const options = {type: 'question', buttons: ['Ok', 'Cancel'], message: 'Delete this entry?'};
+    dialog.showMessageBox(options, i => {
+        if (!i) {
+            ipcRenderer.send('delete-entry', entryID);
+        }
+    })
+
 }
 
 /**

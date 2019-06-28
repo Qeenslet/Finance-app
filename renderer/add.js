@@ -7,7 +7,6 @@ document.getElementById('todoForm').addEventListener('submit', (evt) => {
     evt.preventDefault()
 
     // input on the form
-    console.log(evt.target);
     const formData = {};
     for (let i = 0; i < evt.target.length; i++){
         if (evt.target[i]){
@@ -17,10 +16,17 @@ document.getElementById('todoForm').addEventListener('submit', (evt) => {
             break;
         }
     }
-    //console.log(formData);
-    // send todo to main process
-    ipcRenderer.send('add-entry', formData)
-    closeThisWindow();
+    const validation = validate(formData);
+    if (validation.ok) {
+        ipcRenderer.send('add-entry', formData);
+        closeThisWindow();
+    } else {
+        for (const k in validation) {
+            const elem = document.getElementById(k);
+            elem.classList.add('is-invalid');
+        }
+    }
+
 });
 
 function toggleType() {
@@ -36,6 +42,23 @@ function toggleType() {
             tgt.style.display = 'block';
         }
     }
+}
+
+function validate(formData) {
+    const result = {};
+    if (!formData.expense_date){
+        result.expense_date = false;
+    }
+    if (!formData.expense_categ){
+        result.expense_categ = false;
+    }
+    if (!formData.expense_sum) {
+        result.expense_sum = false;
+    }
+    if (Object.entries(result).length === 0) {
+        result.ok = true;
+    }
+    return result;
 }
 
 ipcRenderer.on('open-add-window', (event, incomes, spents) => {
