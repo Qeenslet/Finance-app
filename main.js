@@ -71,18 +71,29 @@ function main () {
         const deleting = MyData.deleteEntry(entryID);
         deleting.then(() => renderMain(mainWindow)).catch(error => showError(error));
     });
+
+    ipcMain.on('change-month', (event, monthSelected) => {
+       if (/^\d{4}-(0[1-9]|1[0-2])$/.test(monthSelected)) {
+           monthSelected += '-01 00:00:01';
+           renderMain(mainWindow, monthSelected);
+       }
+    });
 }
 
 /**
  * Rendering main window
  *
  * @param mainWindow
+ * @param desiredDate
  */
-function renderMain(mainWindow) {
-    const date = new Date();
+function renderMain(mainWindow, desiredDate = null) {
+    const date = desiredDate ? new Date(desiredDate) : new Date();
     const firstDate = splitDate(new Date(date.getFullYear(), date.getMonth(), 1));
     const lastDate = splitDate(new Date(date.getFullYear(), date.getMonth() + 1, 0));
     let balance = MyData.getBalanceInterval(firstDate, lastDate);
+    let m = parseInt(date.getMonth()) + 1;
+    if (m < 10) m = '0' + m;
+    const theMonth = date.getFullYear() + '-' + m;
     balance.then(res => {
         let sum = 0;
         const byCateg = {};
@@ -92,7 +103,7 @@ function renderMain(mainWindow) {
             byCateg[elem.expense_categ] += parseFloat(elem.expense_sum);
         });
         mainWindow.webContents.send('all-list', res, categs, incomes);
-        mainWindow.webContents.send('balance', sum);
+        mainWindow.webContents.send('balance', sum, theMonth);
         const result = [];
         const result2 = [];
         for (const cat in byCateg) {

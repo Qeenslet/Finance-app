@@ -15,9 +15,11 @@ document.getElementById('createTodoBtn').addEventListener('click', () => {
 /**
  * Display balance
  */
-ipcRenderer.on('balance', (event, balance) => {
+ipcRenderer.on('balance', (event, balance, month) => {
     const bal = document.getElementById('monBal');
-    bal.innerHTML = roundAndFormat(balance);
+    bal.innerHTML = improvedFormat(balance);
+    const selector = document.getElementById('monthSelector');
+    selector.value = month;
 });
 /**
  * Display spents
@@ -96,4 +98,14 @@ function deleteEntry(entryID) {
 const roundAndFormat = float => {
     if (float < 0) float *= -1;
     return '$' + (Math.round(float * 100) / 100).toFixed(2);
+};
+
+const improvedFormat = float => {
+    return float > 0 ? '<span style="color:green">' + roundAndFormat(float) + '</span>' :
+        '<span style="color:red">' + roundAndFormat(float) + '</span>';
+};
+
+function changeMonth() {
+    const selector = document.getElementById('monthSelector');
+    ipcRenderer.send('change-month', selector.value);
 }
