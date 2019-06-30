@@ -104,7 +104,7 @@ function deleteEntry(entryID) {
  */
 const roundAndFormat = float => {
     if (float < 0) float *= -1;
-    return '$' + (Math.round(float * 100) / 100).toFixed(2);
+    return (Math.round(float * 100) / 100).toFixed(2) + 'Р';
 };
 
 const improvedFormat = float => {

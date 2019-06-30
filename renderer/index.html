@@ -13,18 +13,18 @@
     <div class="col-md-6">
       <div class="card">
     <div class="card-header">
-      <h4 class="card-title text-center">Month's balance is <span id="monBal"></span></h4>
+      <h4 class="card-title text-center">Итоги месяца <span id="monBal"></span></h4>
     </div>
     <div class="card-body">
       <div class="form-group">
-        <label for="monthSelector">Select month for report</label>
+        <label for="monthSelector">Отчетный месяц</label>
         <input class="form-control" type="month" min="2019-01" id="monthSelector" onchange="changeMonth()">
       </div>
       <div class="row">
         <div class="col-md-6">
           <div class="card">
             <div class="card-header">
-              <h4 class="card-title">Your spents: <span id="total_spents"></span></h4>
+              <h4 class="card-title">Расходы: <span id="total_spents"></span></h4>
             </div>
             <div class="card-body">
               <ul id="spentsList" class="list-group"></ul>
@@ -34,7 +34,7 @@
         <div class="col-md-6">
           <div class="card">
             <div class="card-header">
-              <h4 class="card-title">Your incomes: <span id="total_incomes"></span></h4>
+              <h4 class="card-title">Приходы: <span id="total_incomes"></span></h4>
             </div>
             <div class="card-body">
               <ul id="incomesList" class="list-group"></ul>
@@ -50,10 +50,10 @@
     <div class="card-header">
       <div style="display: flex; flex-direction: row; justify-content: space-between">
         <div>
-          <h4 class="card-title">Entries</h4>
+          <h4 class="card-title">Записи</h4>
         </div>
         <div>
-          <span style="text-align: right"><button id="createTodoBtn" type="button" class="btn btn-success">New</button></span>
+          <span style="text-align: right"><button id="createTodoBtn" type="button" class="btn btn-success">Новая</button></span>
         </div>
       </div>
     </div>
@@ -62,11 +62,11 @@
         <table class="table">
           <thead>
           <tr>
-            <th scope="col">Date</th>
-            <th scope="col">Category</th>
-            <th scope="col">Description</th>
-            <th scope="col">Amt</th>
-            <th scope="col">Act</th>
+            <th scope="col">Дата</th>
+            <th scope="col">Категория</th>
+            <th scope="col">Описание</th>
+            <th scope="col">Сумма</th>
+            <th scope="col"></th>
           </tr>
           </thead>
           <tbody id="entry_list"></tbody>

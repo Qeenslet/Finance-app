@@ -3,8 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Add Entry</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Новая запись</title>
     <link rel="stylesheet" href="./bootstrap.min.css">
 </head>
 
@@ -12,39 +11,39 @@
 <div class="container">
     <div class="columns">
         <div class="column col-10">
-            <h2 class="text-center">Add Entry</h2>
+            <h2 class="text-center">Новая запись</h2>
 
             <form id="todoForm">
                 <div class="form-group">
-                    <label for="expense_date">Date</label>
+                    <label for="expense_date">Дата</label>
                     <input class="form-control" type="date" name="expense_date" id="expense_date">
                 </div>
                 <div class="form-group">
-                    <label for="type_select">Expense/income</label>
+                    <label for="type_select">Приход/Расход</label>
                     <select id="type_select" onchange="toggleType()" class="form-control">
                         <option value="">...</option>
-                        <option value="expense_categ">Expense</option>
-                        <option value="income_categ">Income</option>
+                        <option value="expense_categ">Расход</option>
+                        <option value="income_categ">Приход</option>
                     </select>
                 </div>
                 <div class="form-group flow_selector" id="expense_categ" style="display: none">
-                    <label for="expense_categ_inside">Expense group</label>
+                    <label for="expense_categ_inside">Группа расходов</label>
                     <select id="expense_categ_inside" name="expense_categ" class="form-control"></select>
                 </div>
                 <div class="form-group flow_selector" id="income_categ" style="display: none">
-                    <label for="income_categ_inside">Income source</label>
+                    <label for="income_categ_inside">Источник прихода</label>
                     <select id="income_categ_inside" name="expense_categ" class="form-control"></select>
                 </div>
                 <div class="form-group">
-                    <label for="expense_sum">$ amount</label>
+                    <label for="expense_sum">Кол-во</label>
                     <input class="form-control" type="text" id="expense_sum" name="expense_sum">
                 </div>
                 <div class="form-group">
-                    <label for="expense_descr">Description</label>
+                    <label for="expense_descr">Описание</label>
                     <input class="form-control" type="text" id="expense_descr" name="expense_descr">
                 </div>
-                <button class="btn btn-success">Add</button>
-                <button class="btn btn-light" onclick="closeThisWindow()">Cancel</button>
+                <button class="btn btn-success">Добавить</button>
+                <button class="btn btn-light" onclick="closeThisWindow()">Отмена</button>
             </form>
 
         </div>

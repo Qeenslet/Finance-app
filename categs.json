@@ -1,12 +1,12 @@
 {
-  "grocery": "Grocery",
-  "transport" : "Transport/Gas",
-  "rent" : "Rent/Bills",
-  "loan" : "Loans",
-  "eat" : "Eating out",
-  "apparel" : "Apparels",
-  "decor" : "House and decoration",
-  "show" : "Entertainment",
-  "travel" : "Travels",
-  "other" : "Other"
+  "grocery": "Продукты",
+  "transport" : "Транспорт",
+  "rent" : "Счета",
+  "loan" : "Кредиты",
+  "eat" : "Еда вне дома",
+  "apparel" : "Одежда",
+  "decor" : "Все для дома",
+  "show" : "Развлечение",
+  "travel" : "Путешествия",
+  "other" : "Другое"
 }

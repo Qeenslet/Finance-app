@@ -1,7 +1,7 @@
 {
-  "salary" : "Salary",
-  "tip" : "Tips",
-  "bonus" : "Cashback/Bonus",
-  "craft" : "Craft",
-  "differ" : "Other"
+  "salary" : "Зарплата",
+  "tip" : "Пенсия",
+  "bonus" : "Бонусы",
+  "craft" : "Переводы",
+  "differ" : "Другое"
 }
