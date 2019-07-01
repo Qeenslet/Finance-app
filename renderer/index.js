@@ -24,22 +24,26 @@ ipcRenderer.on('balance', (event, balance, month) => {
 /**
  * Display spents
  */
-ipcRenderer.on('categ', (event, balance, categName) => {
+ipcRenderer.on('categ', (event, balance, categName, categCode, theMonth) => {
     const bal = document.getElementById(categoryZone);
     outcome += parseFloat(balance);
     const total = document.getElementById('total_spents');
     total.innerText = roundAndFormat(outcome);
-    bal.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center">${categName} <span class="badge badge-warning">${roundAndFormat(balance)}</span></li>`;
+    bal.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center" style="cursor:pointer;" onclick="selectCateg('${categCode}', '${theMonth}')">
+${categName} <span class="badge badge-warning">${roundAndFormat(balance)}</span>
+</li>`;
 });
 /**
  * Display incomes
  */
-ipcRenderer.on('categ2', (event, balance, categName) => {
+ipcRenderer.on('categ2', (event, balance, categName, categCode, theMonth) => {
     const bal = document.getElementById(categoryZone2);
     income += parseFloat(balance);
     const total = document.getElementById('total_incomes');
     total.innerText = roundAndFormat(income);
-    bal.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center">${categName} <span class="badge badge-success">${roundAndFormat(balance)}</span></li>`;
+    bal.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center" style="cursor:pointer;" onclick="selectCateg('${categCode}', '${theMonth}')">
+${categName} <span class="badge badge-success">${roundAndFormat(balance)}</span>
+</li>`;
 });
 /**
  * Drop content after changes before rendering
@@ -60,12 +64,14 @@ ipcRenderer.on('empty-categ', (event) => {
 /**
  * Display entries
  */
-ipcRenderer.on('all-list', (event, list, spentList, incomesList) => {
+ipcRenderer.on('all-list', (event, list, spentList, incomesList, categSelected = false) => {
     const tgt = document.getElementById(allList);
     let html = '';
+    const uniqueCategs = new Set();
     list.forEach(entry => {
         const dateO = new Date(entry.expense_date + ' 13:00:00');
         let categName;
+        uniqueCategs.add(entry.expense_categ);
         if (entry.expense_sum < 0){
             categName = spentList[entry.expense_categ] ? spentList[entry.expense_categ] : 'Undefined';
         } else {
@@ -79,6 +85,16 @@ ipcRenderer.on('all-list', (event, list, spentList, incomesList) => {
                      <td><input type="button" class="btn btn-danger" value="X" onclick="deleteEntry('${entry.expense_id}')"></td>
                </tr>`;
     });
+    const entriesSpec = document.getElementById('entries-categ-spec');
+    if (uniqueCategs.size === 1 && categSelected) {
+        const iterator = uniqueCategs.values();
+        let key = iterator.next();
+        let name = spentList[key.value] ? spentList[key.value] : incomesList[key.value] ? incomesList[key.value] : '';
+        if (name.length > 0) name = ' > ' + name;
+        entriesSpec.innerText = name;
+    } else {
+        entriesSpec.innerText = ''
+    }
     tgt.innerHTML = html;
 });
 
@@ -115,4 +131,8 @@ const improvedFormat = float => {
 function changeMonth() {
     const selector = document.getElementById('monthSelector');
     ipcRenderer.send('change-month', selector.value);
+}
+
+function selectCateg(categ, month) {
+    ipcRenderer.send('select-categ', categ, month);
 }

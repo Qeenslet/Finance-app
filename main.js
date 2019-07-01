@@ -78,6 +78,11 @@ function main () {
            renderMain(mainWindow, monthSelected);
        }
     });
+
+    ipcMain.on('select-categ', (event, categ, month) => {
+        month += '-01 00:00:01';
+        renderEntriesForCateg(mainWindow, categ, month);
+    });
 }
 
 /**
@@ -108,22 +113,32 @@ function renderMain(mainWindow, desiredDate = null) {
         const result2 = [];
         for (const cat in byCateg) {
             if (categs[cat]) {
-                result.push({name: categs[cat], amt: byCateg[cat]});
+                result.push({name: categs[cat], amt: byCateg[cat], key: cat});
             } else if (incomes[cat]) {
-                result2.push({name: incomes[cat], amt: byCateg[cat]})
+                result2.push({name: incomes[cat], amt: byCateg[cat], key: cat})
             }
         }
         result.sort((a, b) => (a.amt > b.amt) ? 1 : -1);
         result2.sort((a, b) => (a.amt > b.amt) ? -1 : 1);
         mainWindow.webContents.send('empty-categ');
         result.forEach(el => {
-            mainWindow.webContents.send('categ', (el.amt * -1), el.name);
+            mainWindow.webContents.send('categ', (el.amt * -1), el.name, el.key, theMonth);
         });
         result2.forEach(el => {
-            mainWindow.webContents.send('categ2', el.amt, el.name);
+            mainWindow.webContents.send('categ2', el.amt, el.name, el.key, theMonth);
         });
     });
 
+}
+
+function renderEntriesForCateg(mainWindow, category, desiredMonth) {
+    const date = new Date(desiredMonth);
+    const firstDate = splitDate(new Date(date.getFullYear(), date.getMonth(), 1));
+    const lastDate = splitDate(new Date(date.getFullYear(), date.getMonth() + 1, 0));
+    let result = MyData.getExpensesByCategory(category, firstDate, lastDate);
+    result.then(res => {
+        mainWindow.webContents.send('all-list', res, categs, incomes, true);
+    });
 }
 
 /**

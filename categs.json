@@ -8,5 +8,7 @@
   "decor" : "House and decoration",
   "show" : "Entertainment",
   "travel" : "Travels",
+  "for-craft" : "For craft",
+  "help" : "Charity/Help",
   "other" : "Other"
 }
