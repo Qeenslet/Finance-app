@@ -19,6 +19,7 @@
       <div class="form-group">
         <label for="monthSelector">Select month for report</label>
         <input class="form-control" type="month" min="2019-01" id="monthSelector" onchange="changeMonth()">
+        <button id="backToAll" type="button" class="btn btn-info" onclick="changeMonth()" style="margin-top: 5px">Reset selection</button>
       </div>
       <div class="row">
         <div class="col-md-6">
@@ -53,7 +54,9 @@
           <h4 class="card-title">Entries<span id="entries-categ-spec"></span></h4>
         </div>
         <div>
-          <span style="text-align: right"><button id="createTodoBtn" type="button" class="btn btn-success">New</button></span>
+          <span style="text-align: right;">
+            <button id="createTodoBtn" type="button" class="btn btn-success">New</button>
+          </span>
         </div>
       </div>
     </div>

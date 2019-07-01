@@ -29,7 +29,7 @@ ipcRenderer.on('categ', (event, balance, categName, categCode, theMonth) => {
     outcome += parseFloat(balance);
     const total = document.getElementById('total_spents');
     total.innerText = roundAndFormat(outcome);
-    bal.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center" style="cursor:pointer;" onclick="selectCateg('${categCode}', '${theMonth}')">
+    bal.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center my-categs" style="cursor:pointer;" onclick="selectCateg('${categCode}', '${theMonth}')" id="list_categ_${categCode}">
 ${categName} <span class="badge badge-warning">${roundAndFormat(balance)}</span>
 </li>`;
 });
@@ -41,7 +41,7 @@ ipcRenderer.on('categ2', (event, balance, categName, categCode, theMonth) => {
     income += parseFloat(balance);
     const total = document.getElementById('total_incomes');
     total.innerText = roundAndFormat(income);
-    bal.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center" style="cursor:pointer;" onclick="selectCateg('${categCode}', '${theMonth}')">
+    bal.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center my-categs" style="cursor:pointer;" onclick="selectCateg('${categCode}', '${theMonth}')" id="list_categ_${categCode}">
 ${categName} <span class="badge badge-success">${roundAndFormat(balance)}</span>
 </li>`;
 });
@@ -86,14 +86,23 @@ ipcRenderer.on('all-list', (event, list, spentList, incomesList, categSelected =
                </tr>`;
     });
     const entriesSpec = document.getElementById('entries-categ-spec');
+    const backButton = document.getElementById('backToAll');
     if (uniqueCategs.size === 1 && categSelected) {
         const iterator = uniqueCategs.values();
         let key = iterator.next();
         let name = spentList[key.value] ? spentList[key.value] : incomesList[key.value] ? incomesList[key.value] : '';
         if (name.length > 0) name = ' > ' + name;
         entriesSpec.innerText = name;
+        backButton.style.display = 'block';
+        const allLists = document.getElementsByClassName('my-categs');
+        for (let i = 0; i < allLists.length; i++){
+            allLists[i].classList.remove('active');
+        }
+        const highlight = document.getElementById('list_categ_' + key.value);
+        highlight.classList.add('active');
     } else {
-        entriesSpec.innerText = ''
+        entriesSpec.innerText = '';
+        backButton.style.display = 'none';
     }
     tgt.innerHTML = html;
 });
