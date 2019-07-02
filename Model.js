@@ -32,7 +32,7 @@ class Model {
     getExpensesByCategory(categ, dateStart, dateEnd) {
 
         return new Promise((resolve, reject) => {
-            let sql = 'SELECT expense_id, expense_date, expense_sum, expense_categ, expense_descr FROM expenses WHERE expense_categ = ? AND expense_date BETWEEN ? AND ?';
+            let sql = 'SELECT expense_id, expense_date, expense_sum, expense_categ, expense_descr FROM expenses WHERE expense_categ = ? AND expense_date BETWEEN ? AND ? ORDER BY expense_date DESC';
             this.db.all(sql, [categ, dateStart, dateEnd], function(err, rows){
                 if (err) reject("Read error: " + err.message)
                 else {
