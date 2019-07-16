@@ -1,5 +1,6 @@
 const sqlite3 = require('sqlite3').verbose();
-
+const settings = require('./extapi');
+const fetch = require("node-fetch");
 class Model {
     constructor() {
         this.db = new sqlite3.Database('./expenses.db', (err) => {
@@ -12,7 +13,8 @@ class Model {
             'expense_date TEXT NOT NULL,' +
             'expense_categ TEXT NOT NULL,' +
             'expense_descr TEXT,' +
-            'expense_sum TEXT NOT NULL)')
+            'expense_sum TEXT NOT NULL)');
+        this.db.run('CREATE TABLE if NOT EXISTS deleted (expense_id TEXT NOT NULL, delete_day TEXT NOT NULL )');
     }
 
 
@@ -50,8 +52,13 @@ class Model {
                 reject('Not enough data!')
             } else {
                 let sql = 'INSERT INTO expenses(expense_id, expense_date, expense_categ, expense_descr, expense_sum) VALUES(?, ?, ?, ?, ?)';
-                let id = Math.random().toString(36).substr(2, 10) + entryData.expense_date;
+                let id;
                 let description;
+                if (entryData.expense_id) {
+                    id = entryData.expense_id;
+                } else {
+                    id = Math.random().toString(36).substr(2, 10) + entryData.expense_date;
+                }
                 if (!entryData.expense_descr) description = '';
                 else description = entryData.expense_descr;
                 this.db.run(sql,
@@ -81,6 +88,121 @@ class Model {
                }
             });
         });
+    }
+
+    registerDeletion(entryID) {
+        return new Promise((resolve, reject) => {
+            const today = new Date();
+            let deletedDay = today.toISOString().split('T')[0];
+            let sql = 'INSERT INTO deleted(expense_id, delete_day) VALUES(?, ?)';
+            this.db.run(sql,
+                [entryID, deletedDay],
+                (err) => {
+                    if (err) reject("Read error: " + err.message);
+                    else {
+                        resolve();
+                    }
+
+                });
+        });
+    }
+
+    getAllSum() {
+        return new Promise((resolve, reject) => {
+            let sql = 'SELECT SUM(expense_sum) AS total FROM expenses';
+            this.db.get(sql, function(err, row){
+                if (err) reject("Read error: " + err.message)
+                else {
+                    resolve(row);
+                }
+            })
+        });
+    }
+
+    getAllNumber() {
+        return new Promise((resolve, reject) => {
+            let sql = 'SELECT COUNT(expense_id) AS total FROM expenses';
+            this.db.get(sql, function(err, row){
+                if (err) reject("Read error: " + err.message)
+                else {
+                    resolve(row);
+                }
+            })
+        });
+    }
+
+    getAllEntries() {
+        return new Promise((resolve, reject) => {
+            let sql = 'SELECT expense_id, expense_date, expense_sum, expense_categ, expense_descr FROM expenses';
+            this.db.all(sql, function(err, rows){
+                if (err) reject("Read error: " + err.message)
+                else {
+                    resolve(rows);
+                }
+            })
+        });
+    }
+
+    getAllDeletions() {
+        return new Promise((resolve, reject) => {
+            let sql = 'SELECT expense_id, delete_day FROM deleted';
+            this.db.all(sql, function(err, rows){
+                if (err) reject("Read error: " + err.message)
+                else {
+                    resolve(rows);
+                }
+            })
+        });
+    }
+
+
+    checkEntry(id) {
+        return new Promise((resolve, reject) => {
+            let sql = 'SELECT expense_id FROM expenses WHERE expense_id = ?';
+            this.db.get(sql, [id], function(err, row){
+                if (err) reject("Read error: " + err.message)
+                else {
+                    resolve(row);
+                }
+            })
+        });
+    }
+
+
+
+    static requestRemoteSummary() {
+        let apiString = settings.server + "/" + settings.apikey + "/summary";
+        return fetch(apiString);
+    }
+
+    static sendEntriesToRemote(entries) {
+        let apiString = settings.server + "/" + settings.apikey + "/entries";
+        let d = JSON.stringify(entries);
+        return fetch(apiString, {
+            method: 'POST',
+            mode: 'cors',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: d
+        }).then(response => {
+            return response.json()
+            });
+    }
+
+    static requestDeletionFromRemote(entries) {
+        let apiString = settings.server + "/" + settings.apikey + "/entries";
+        let d = JSON.stringify(entries);
+        return fetch(apiString, {
+            method: 'DELETE',
+            mode: 'cors',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: d
+        }).then(response => {
+            return response.json()
+            });
     }
 }
 module.exports = Model;

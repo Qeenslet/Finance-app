@@ -107,6 +107,11 @@ ipcRenderer.on('all-list', (event, list, spentList, incomesList, categSelected =
     tgt.innerHTML = html;
 });
 
+ipcRenderer.on('update-sync', (event, string) => {
+    const tgt = document.getElementById('sync_status');
+    tgt.innerHTML = string;
+});
+
 /**
  * Delete entry
  * @param entryID
@@ -144,4 +149,8 @@ function changeMonth() {
 
 function selectCateg(categ, month) {
     ipcRenderer.send('select-categ', categ, month);
+}
+
+function syncronize() {
+    ipcRenderer.send('sync-request');
 }

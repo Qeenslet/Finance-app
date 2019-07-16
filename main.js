@@ -69,7 +69,9 @@ function main () {
     // Delete entry event
     ipcMain.on('delete-entry', (event, entryID) => {
         const deleting = MyData.deleteEntry(entryID);
-        deleting.then(() => renderMain(mainWindow)).catch(error => showError(error));
+        const logging = MyData.registerDeletion(entryID);
+        Promise.all([deleting, logging]).then(() => renderMain(mainWindow)).catch(error => showError(error));
+        //deleting.then(() => renderMain(mainWindow)).catch(error => showError(error));
     });
 
     ipcMain.on('change-month', (event, monthSelected) => {
@@ -83,6 +85,10 @@ function main () {
         month += '-01 00:00:01';
         renderEntriesForCateg(mainWindow, categ, month);
     });
+
+    ipcMain.on('sync-request', event => {
+        syncronization(mainWindow);
+    })
 }
 
 /**
@@ -151,6 +157,87 @@ function renderEntriesForCateg(mainWindow, category, desiredMonth) {
         return date.toISOString().split('T')[0];
     }
     return '1999-01-01';
+ }
+
+ function syncronization(mainWindow) {
+     mainWindow.webContents.send('update-sync', 'Requesting remote server');
+     let req = Model.requestRemoteSummary();
+     req.then(response => response.json())
+         .then(serverData => {
+             mainWindow.webContents.send('update-sync', 'Response recieved');
+             let req2 = MyData.getAllSum();
+             req2.then(row => {
+                 let req3 = MyData.getAllNumber();
+                 req3.then(row2 => {
+                     compareSync(serverData, row, row2, mainWindow);
+                 })
+             })
+         }).catch( error => {
+         mainWindow.webContents.send('update-sync', 'Error: ' + error);
+     })
+ }
+
+
+ function compareSync(r, sum, total, mainWindow) {
+     if (r.summary.entries != total.total && r.summary.sum != sum.total) {
+        if (r.summary.entries == 0 || r.summary.entries < total.total) {
+            //Remote storage is empty or there are less entries
+            let req = MyData.getAllEntries();
+            let del = MyData.getAllDeletions();
+            Promise.all([req, del]).then(async values => {
+                const send1 = await Model.sendEntriesToRemote(values[0]);
+                const send2 = await Model.requestDeletionFromRemote(values[1]);
+                Promise.all([send1, send2]).then(someData => {
+                    mainWindow.webContents.send('update-sync', 'Data saved on remote server!');
+
+                }).catch(error => {
+                    mainWindow.webContents.send('update-sync', 'Error: ' + error);
+                });
+            });
+        } else if (r.summary.entries > total.total) {
+            mainWindow.webContents.send('update-sync', 'Updating local storage');
+            //There are more entries in remote storage than in local
+            let del = MyData.getAllDeletions();
+            del.then(value => {
+                let send2 = Model.requestDeletionFromRemote(value);
+                send2.then(serverData => {
+                    //mainWindow.webContents.send('update-sync', 'Data saved on remote server!');
+                    if (serverData.entries) {
+                        serverData.entries.forEach(entry => {
+                            if (entry.expense_id) {
+                                let check = MyData.checkEntry(entry.expense_id);
+                                check.then(row => {
+                                    if (!row || !row.expense_id) {
+                                        let save = MyData.addExpense(entry);
+                                        save.then(() => {
+                                            renderMain(mainWindow)
+                                        })
+                                    }
+                                })
+                            }
+                        });
+                    }
+                });
+            });
+
+        }
+        //syncronization(mainWindow);
+    } else {
+         mainWindow.webContents.send('update-sync', 'Data is up to date!');
+     }
+ }
+
+ function testIt(entries, deletions, mainWindow) {
+     const send1 = Model.sendEntriesToRemote(entries);
+     const send2 = Model.requestDeletionFromRemote(deletions);
+     Promise.all([send1, send2]).then(someData => {
+         console.log(JSON.stringify(someData));
+         mainWindow.webContents.send('update-sync', 'Data saved on remote server!');
+         mainWindow.webContents.send('update-sync', 'Error!!!');
+
+     }).catch(error => {
+         mainWindow.webContents.send('update-sync', 'Error: ' + error);
+     });
  }
 
 /**
