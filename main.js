@@ -164,6 +164,7 @@ function renderEntriesForCateg(mainWindow, category, desiredMonth) {
      let req = Model.requestRemoteSummary();
      req.then(response => response.json())
          .then(serverData => {
+             console.log(serverData);
              mainWindow.webContents.send('update-sync', 'Response recieved');
              let req2 = MyData.getAllSum();
              req2.then(row => {
@@ -188,6 +189,7 @@ function renderEntriesForCateg(mainWindow, category, desiredMonth) {
                 const send1 = await Model.sendEntriesToRemote(values[0]);
                 const send2 = await Model.requestDeletionFromRemote(values[1]);
                 Promise.all([send1, send2]).then(someData => {
+                    console.log(someData);
                     mainWindow.webContents.send('update-sync', 'Data saved on remote server!');
 
                 }).catch(error => {
@@ -195,15 +197,15 @@ function renderEntriesForCateg(mainWindow, category, desiredMonth) {
                 });
             });
         } else if (r.summary.entries > total.total) {
-            mainWindow.webContents.send('update-sync', 'Updating local storage');
+            mainWindow.webContents.send('update-sync', 'Synchronizing local and remote storage');
             //There are more entries in remote storage than in local
             let del = MyData.getAllDeletions();
             del.then(value => {
                 let send2 = Model.requestDeletionFromRemote(value);
                 send2.then(serverData => {
                     //mainWindow.webContents.send('update-sync', 'Data saved on remote server!');
-                    if (serverData.entries) {
-                        serverData.entries.forEach(entry => {
+                    if (serverData.entries && serverData.entries.real) {
+                        serverData.entries.real.forEach(entry => {
                             if (entry.expense_id) {
                                 let check = MyData.checkEntry(entry.expense_id);
                                 check.then(row => {
@@ -217,11 +219,20 @@ function renderEntriesForCateg(mainWindow, category, desiredMonth) {
                             }
                         });
                     }
+                    if (serverData.entries && serverData.entries.deleted) {
+                        serverData.entries.deleted.forEach( del => {
+                            let act = MyData.deleteEntry(del.expense_id);
+                            act.then(() => {
+                               renderMain(mainWindow);
+                            });
+                        });
+                    }
+                    mainWindow.webContents.send('update-sync', 'Synchronization completed, updating');
                 });
             });
 
         }
-        //syncronization(mainWindow);
+        syncronization(mainWindow);
     } else {
          mainWindow.webContents.send('update-sync', 'Data is up to date!');
      }

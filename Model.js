@@ -15,6 +15,7 @@ class Model {
             'expense_descr TEXT,' +
             'expense_sum TEXT NOT NULL)');
         this.db.run('CREATE TABLE if NOT EXISTS deleted (expense_id TEXT NOT NULL, delete_day TEXT NOT NULL )');
+        //this.db.run('CREATE TABLE if NOT EXISTS settings (section_key TEXT NOT NULL , setting_key TEXT NOT NULL , setting_value TEXT NOT NULL )')
     }
 
 
@@ -167,6 +168,8 @@ class Model {
             })
         });
     }
+
+    //getSetting
 
 
 
