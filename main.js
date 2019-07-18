@@ -205,7 +205,7 @@ function renderEntriesForCateg(mainWindow, category, desiredMonth) {
          Promise.all([send1, send2]).then(someData => {
              console.log(someData);
              if (someData[1]) {
-                 updateLocalBase(someData[1]);
+                 updateLocalBase(someData[1], mainWindow);
              }
              mainWindow.webContents.send('update-sync', 'Data saved on remote server!');
 
@@ -223,7 +223,7 @@ function renderEntriesForCateg(mainWindow, category, desiredMonth) {
          let send2 = Model.requestDeletionFromRemote(value);
          send2.then(serverData => {
              //mainWindow.webContents.send('update-sync', 'Data saved on remote server!');
-             updateLocalBase(serverData);
+             updateLocalBase(serverData, mainWindow);
              mainWindow.webContents.send('update-sync', 'Synchronization completed, updating');
          });
      });
@@ -231,7 +231,7 @@ function renderEntriesForCateg(mainWindow, category, desiredMonth) {
  }
 
 
- function updateLocalBase(serverData) {
+ function updateLocalBase(serverData, mainWindow) {
      if (serverData.entries && serverData.entries.real) {
          serverData.entries.real.forEach(entry => {
              if (entry.expense_id) {
