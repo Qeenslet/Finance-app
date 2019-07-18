@@ -205,7 +205,11 @@ function renderEntriesForCateg(mainWindow, category, desiredMonth) {
          Promise.all([send1, send2]).then(someData => {
              console.log(someData);
              if (someData[1]) {
-                 updateLocalBase(someData[1], mainWindow);
+                 const save = updateLocalBase(someData[1]);
+                 save.then(sd => {
+                    renderMain(mainWindow);
+                    syncronization(mainWindow);
+                 });
              }
              mainWindow.webContents.send('update-sync', 'Data saved on remote server!');
 
@@ -223,7 +227,11 @@ function renderEntriesForCateg(mainWindow, category, desiredMonth) {
          let send2 = Model.requestDeletionFromRemote(value);
          send2.then(serverData => {
              //mainWindow.webContents.send('update-sync', 'Data saved on remote server!');
-             updateLocalBase(serverData, mainWindow);
+             const save = updateLocalBase(serverData);
+             save.then(sd => {
+                renderMain(mainWindow);
+                syncronization(mainWindow);
+             });
              mainWindow.webContents.send('update-sync', 'Synchronization completed, updating');
          });
      });
@@ -231,31 +239,37 @@ function renderEntriesForCateg(mainWindow, category, desiredMonth) {
  }
 
 
- function updateLocalBase(serverData, mainWindow) {
-     if (serverData.entries && serverData.entries.real) {
-         serverData.entries.real.forEach(entry => {
-             if (entry.expense_id) {
-                 let check = MyData.checkEntry(entry.expense_id);
-                 check.then(row => {
-                     if (!row || !row.expense_id) {
-                         let save = MyData.addExpense(entry);
-                         save.then(() => {
-                             renderMain(mainWindow)
-                         })
-                     }
-                 })
+ async function updateLocalBase(serverData) {
+
+     const entries = await checkEntries(serverData.entries.real);
+     const deletes = await updateDeletes(serverData.entries.deleted)
+     return Promise.all([entries, deletes]);
+ }
+
+ async function checkEntries(real) {
+     const promises = [];
+     real.forEach(entry => {
+         promises.push(MyData.checkEntry(entry.expense_id));
+     });
+     Promise.all(promises).then(results => {
+         const proms2 = [];
+         results.forEach((row, index) => {
+             if (!row || !row.expense_id) {
+                 proms2.push(MyData.addExpense(real[index]));
              }
          });
-     }
-     if (serverData.entries && serverData.entries.deleted) {
-         serverData.entries.deleted.forEach( del => {
-             let act = MyData.deleteEntry(del.expense_id);
-             act.then(() => {
-                 renderMain(mainWindow);
-             });
-         });
-     }
+         return Promise.all(proms2);
+     });
  }
+
+ async function updateDeletes(deleted) {
+     const promises = [];
+     deleted.forEach(del => {
+         promises.push(MyData.deleteEntry(del.expense_id));
+     });
+     return Promise.all(promises);
+ }
+
 
 /**
  * Display error
