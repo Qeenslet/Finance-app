@@ -137,6 +137,12 @@ function renderMain(mainWindow, desiredDate = null) {
 
 }
 
+/**
+ *
+ * @param mainWindow
+ * @param category
+ * @param desiredMonth
+ */
 function renderEntriesForCateg(mainWindow, category, desiredMonth) {
     const date = new Date(desiredMonth);
     const firstDate = splitDate(new Date(date.getFullYear(), date.getMonth(), 1));
@@ -159,7 +165,12 @@ function renderEntriesForCateg(mainWindow, category, desiredMonth) {
     return '1999-01-01';
  }
 
- function syncronization(mainWindow) {
+/**
+ * Synchronization of local and remote databases
+ *
+ * @param mainWindow
+ */
+function syncronization(mainWindow) {
      mainWindow.webContents.send('update-sync', 'Requesting remote server');
      let req = Model.requestRemoteSummary();
      req.then(response => response.json())
@@ -177,7 +188,13 @@ function renderEntriesForCateg(mainWindow, category, desiredMonth) {
      })
  }
 
-
+/**
+ * Compare response from remote with local data, decide what to do
+ * @param r
+ * @param sum
+ * @param total
+ * @param mainWindow
+ */
  function compareSync(r, sum, total, mainWindow) {
      if (r.summary.entries != total.total && r.summary.sum != sum.total) {
         if (r.summary.entries == 0 || r.summary.entries < total.total) {
@@ -196,7 +213,11 @@ function renderEntriesForCateg(mainWindow, category, desiredMonth) {
      }
  }
 
- function passToServer(mainWindow) {
+/**
+ * Send entries to server, apply deletes from server
+ * @param mainWindow
+ */
+function passToServer(mainWindow) {
      let req = MyData.getAllEntries();
      let del = MyData.getAllDeletions();
      Promise.all([req, del]).then(async values => {
@@ -219,7 +240,11 @@ function renderEntriesForCateg(mainWindow, category, desiredMonth) {
      });
  }
 
- function applyFromServer(mainWindow) {
+/**
+ * Send deletes to server, apply response
+ * @param mainWindow
+ */
+function applyFromServer(mainWindow) {
      mainWindow.webContents.send('update-sync', 'Synchronizing local and remote storage');
      let del = MyData.getAllDeletions();
      del.then(value => {
@@ -238,7 +263,11 @@ function renderEntriesForCateg(mainWindow, category, desiredMonth) {
 
  }
 
-
+/**
+ * Update local database
+ * @param serverData
+ * @returns {Promise<[void, [any, any, any, any, any, any, any, any, any, any]]>}
+ */
  async function updateLocalBase(serverData) {
 
      const entries = await checkEntries(serverData.entries.real);
@@ -246,6 +275,11 @@ function renderEntriesForCateg(mainWindow, category, desiredMonth) {
      return Promise.all([entries, deletes]);
  }
 
+/**
+ * Check and save entries if needed
+ * @param real
+ * @returns {Promise<void>}
+ */
  async function checkEntries(real) {
      const promises = [];
      real.forEach(entry => {
@@ -262,6 +296,11 @@ function renderEntriesForCateg(mainWindow, category, desiredMonth) {
      });
  }
 
+/**
+ * Update deletes
+ * @param deleted
+ * @returns {Promise<[any, any, any, any, any, any, any, any, any, any]>}
+ */
  async function updateDeletes(deleted) {
      const promises = [];
      deleted.forEach(del => {
