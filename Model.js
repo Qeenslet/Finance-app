@@ -210,8 +210,10 @@ class Model {
     executeCommand(instruction) {
         const raw = JSON.parse(instruction.operation_data);
         if (instruction.command === 'ADD') {
+            console.log('Adding ' + raw.expense_id);
             return this.addExpense(raw)
         } else if (instruction.command === 'DEL') {
+            console.log('Deleting ' + raw.expense_id);
             return this.deleteEntry(raw.expense_id)
         }
     }

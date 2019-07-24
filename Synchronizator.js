@@ -41,34 +41,40 @@ class Synchronizator {
                         if (data.chunks) {
                             let step = parseInt((100 - this.percent) / data.chunks.length);
                             this.updateWindow('chunks recieved');
+                            if (data.chunks.length == 0 || (data.chunks.length === 1 && data.chunks[0]['chunk_key'] === chunk_key)) {
+                                this.updateWindow('No new chunks...');
+                                this.uploadOperations();
+                            }
                             data.chunks.forEach(chunk => {
                                 this.percent += step;
-                                if (this.percent >= 100) this.percent = 99;
-                                const opers = this.getChunkOperations(chunk.chunk_key);
-                                this.updateWindow('requesting chunk key: ' + chunk.chunk_key);
-                                opers.then(operations => {
-                                    this.updateWindow('recieved operations, executing...');
-                                    if (operations.operations) {
-                                        const promises = [];
-                                        operations.operations.forEach(instruction => {
-                                            promises.push(this.myData.executeCommand(instruction));
-                                        });
-                                        Promise.all(promises).then(res => {
-                                            this.uploadOperations();
-                                        }).catch(error => {
-                                            console.log(error);
-                                            this.updateWindow('Error message droped to console, terminating...');
+                                if (chunk !== chunk_key) {
+                                    if (this.percent >= 100) this.percent = 99;
+                                    const opers = this.getChunkOperations(chunk.chunk_key);
+                                    this.updateWindow('requesting chunk key: ' + chunk.chunk_key);
+                                    opers.then(operations => {
+                                        this.updateWindow('recieved operations, executing...');
+                                        if (operations.operations) {
+                                            const promises = [];
+                                            operations.operations.forEach(instruction => {
+                                                promises.push(this.myData.executeCommand(instruction));
+                                            });
+                                            Promise.all(promises).then(res => {
+                                                this.uploadOperations();
+                                            }).catch(error => {
+                                                console.log(error);
+                                                this.updateWindow('Error message droped to console, terminating...');
+                                                this.terminateUpdate();
+                                            })
+                                        } else {
+                                            this.updateWindow('Incorrect response from server, terminating...');
                                             this.terminateUpdate();
-                                        })
-                                    } else {
-                                        this.updateWindow('Incorrect response from server, terminating...')
-                                        this.terminateUpdate();
-                                    }
-                                })
+                                        }
+                                    })
+                                }
                             })
                         } else {
                             this.updateWindow('No data recieve about chunks');
-                            this.terminateUpdate();
+                            this.uploadOperations();
                         }
                     });
                 });
@@ -96,10 +102,11 @@ class Synchronizator {
                         this.updateWindow('Chunk key recieved, updating local data...');
                         const update = this.myData.setChunkKeys(response.chunk_key);
                         update.then(() => {
-                            this.syncronize();
+                            setTimeout(() => this.syncronize(), 4000);
                         })
                     } else {
                         this.updateWindow('Server-side error retrieving chunk key, terminating...');
+                        console.log(response);
                         this.terminateUpdate();
                     }
                 })
@@ -151,6 +158,7 @@ class Synchronizator {
 
     updateWindow(message) {
         this.window.webContents.send('update', this.percent, message);
+        console.log(message);
     }
 
     terminateUpdate() {
