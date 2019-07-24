@@ -38,44 +38,9 @@ class Synchronizator {
                     this.updateWindow('Last chunk is ' + chunk_key);
                     const remoteChunks = this.recieveChunks(chunk_key);
                     remoteChunks.then(data => {
-                        if (data.chunks) {
-                            let step = parseInt((100 - this.percent) / data.chunks.length);
-                            this.updateWindow('chunks recieved');
-                            if (data.chunks.length == 0 || (data.chunks.length === 1 && data.chunks[0]['chunk_key'] === chunk_key)) {
-                                this.updateWindow('No new chunks...');
-                                this.uploadOperations();
-                            }
-                            data.chunks.forEach(chunk => {
-                                this.percent += step;
-                                if (chunk !== chunk_key) {
-                                    if (this.percent >= 100) this.percent = 99;
-                                    const opers = this.getChunkOperations(chunk.chunk_key);
-                                    this.updateWindow('requesting chunk key: ' + chunk.chunk_key);
-                                    opers.then(operations => {
-                                        this.updateWindow('recieved operations, executing...');
-                                        if (operations.operations) {
-                                            const promises = [];
-                                            operations.operations.forEach(instruction => {
-                                                promises.push(this.myData.executeCommand(instruction));
-                                            });
-                                            Promise.all(promises).then(res => {
-                                                this.uploadOperations();
-                                            }).catch(error => {
-                                                console.log(error);
-                                                this.updateWindow('Error message droped to console, terminating...');
-                                                this.terminateUpdate();
-                                            })
-                                        } else {
-                                            this.updateWindow('Incorrect response from server, terminating...');
-                                            this.terminateUpdate();
-                                        }
-                                    })
-                                }
-                            })
-                        } else {
-                            this.updateWindow('No data recieve about chunks');
-                            this.uploadOperations();
-                        }
+                        const doChunks = this.executeRemoteChunks(data, chunk_key);
+                        doChunks.then(() => this.uploadOperations())
+                                .catch(() => this.terminateUpdate())
                     });
                 });
 
@@ -164,6 +129,60 @@ class Synchronizator {
     terminateUpdate() {
         this.window.webContents.send('done');
     }
+
+
+    executeRemoteChunks(data, chunk_key) {
+        return new Promise((resolve, reject) => {
+            if (data.chunks) {
+                let step = parseInt((100 - this.percent) / data.chunks.length);
+                this.updateWindow('chunks recieved');
+                if (data.chunks.length == 0 || (data.chunks.length === 1 && data.chunks[0]['chunk_key'] === chunk_key)) {
+                    this.updateWindow('No new chunks...');
+                    resolve();
+                }
+                const proms = [];
+                data.chunks.forEach(chunk => {
+                    if (chunk !== chunk_key) {
+                        proms.push(this.runChunk(chunk, step));
+                    }
+
+                });
+                Promise.all(proms).then(() => {
+                    resolve();
+                }).catch(error => {
+                    console.log(error);
+                    reject();
+                })
+            } else {
+                this.updateWindow('No data recieve about chunks');
+                resolve();
+            }
+        });
+    }
+
+    runChunk(chunk, step) {
+        return new Promise((resolve) => {
+            const promises = [];
+            promises.push(this.getChunkOperations(chunk.chunk_key));
+            this.updateWindow('requesting chunk key: ' + chunk.chunk_key);
+            Promise.all(promises).then((bunch) => {
+                const proms = [];
+                bunch.forEach(operations => {
+                    this.percent += step;
+                    if (this.percent >= 100) this.percent = 99;
+                    if (operations.operations) {
+                        operations.operations.forEach(instruction => {
+                            proms.push(this.myData.executeCommand(instruction));
+                        });
+                    }
+                });
+                return Promise.all(proms);
+            }).then(() => resolve());
+        });
+    }
+
+
+
 
 }
 
