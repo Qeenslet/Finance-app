@@ -34,7 +34,6 @@ class Synchronizator {
                 //request chunks
                 //this.uploadOperations();
                 const req = this.myData.getLastChunk();
-                const promises = [];
                 req.then(chunk_key => {
                     this.updateWindow('Last chunk is ' + chunk_key);
                     const remoteChunks = this.recieveChunks(chunk_key);
@@ -50,21 +49,30 @@ class Synchronizator {
                                 opers.then(operations => {
                                     this.updateWindow('recieved operations, executing...');
                                     if (operations.operations) {
-
+                                        const promises = [];
                                         operations.operations.forEach(instruction => {
                                             promises.push(this.myData.executeCommand(instruction));
+                                        });
+                                        Promise.all(promises).then(res => {
+                                            this.uploadOperations();
+                                        }).catch(error => {
+                                            console.log(error);
+                                            this.updateWindow('Error message droped to console, terminating...');
+                                            this.terminateUpdate();
                                         })
+                                    } else {
+                                        this.updateWindow('Incorrect response from server, terminating...')
+                                        this.terminateUpdate();
                                     }
                                 })
                             })
                         } else {
-                            console.log('No data recieve about chunks');
+                            this.updateWindow('No data recieve about chunks');
+                            this.terminateUpdate();
                         }
                     });
                 });
-                Promise.all(promises).then(res => {
-                    this.uploadOperations();
-                }).catch(error => {console.log(error)})
+
             }
         } else {
             this.percent = 100;
@@ -80,7 +88,7 @@ class Synchronizator {
         this.updateWindow('Preparing data for upload');
         const query = this.myData.getLastOperations();
         query.then(rows => {
-            if (rows) {
+            if (rows && rows.length > 0) {
                 const send = this.sendOperationsToRemote(rows);
                 this.updateWindow('Uploading...');
                 send.then(response => {
@@ -91,9 +99,14 @@ class Synchronizator {
                             this.syncronize();
                         })
                     } else {
-                        //console.log(response);
+                        this.updateWindow('Server-side error retrieving chunk key, terminating...');
+                        this.terminateUpdate();
                     }
                 })
+            } else {
+                this.updateWindow('No new entries to upload...');
+                this.updateWindow('Terminating...');
+                this.terminateUpdate();
             }
         });
     }

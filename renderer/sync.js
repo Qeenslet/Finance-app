@@ -8,7 +8,8 @@ ipcRenderer.on('update', (event, percent, status) => {
     progressBar.setAttribute('style', 'width:' + percent + '%');
     progressBar.innerHTML = percent + '%';
     const statusWindow = document.getElementById('sync_status');
-    statusWindow.innerHTML += status + '<br>';
+    statusWindow.innerHTML += '<p><small>' + status + '</small></p>';
+    statusWindow.scrollTop = statusWindow.scrollHeight;
 });
 ipcRenderer.on('done', (event => {
     const h2 = document.getElementById('process_name');
