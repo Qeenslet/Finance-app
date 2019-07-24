@@ -6,7 +6,8 @@
   "scripts": {
     "start": "electron .",
     "rebuild": "electron-rebuild -f -w sqlite3",
-    "postinstall": "electron-builder install-app-deps"
+    "postinstall": "electron-builder install-app-deps",
+    "migrate" : "node scripts/migration.js"
   },
   "repository": "https://github.com/Qeenslet/Finance-app",
   "keywords": [

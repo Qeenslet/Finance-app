@@ -12,6 +12,9 @@ const categs = require('./categs');
 
 const incomes = require('./incomes');
 
+const sync = require('./Synchronizator');
+const settings = require('./extapi');
+
 const MyData = new Model();
 
 /**
@@ -23,6 +26,7 @@ function main () {
     });
     // Main window display
     let addExpenseWin;
+    let syncWindow;
     const date = new Date();
     const firstDate = splitDate(new Date(date.getFullYear(), date.getMonth(), 1));
     const lastDate = splitDate(new Date(date.getFullYear(), date.getMonth() + 1, 0));
@@ -49,7 +53,7 @@ function main () {
 
             // cleanup
             addExpenseWin.on('closed', () => {
-                addExpenseWin = null
+                addExpenseWin = null;
             });
         }
     });
@@ -61,8 +65,10 @@ function main () {
             data.expense_sum = tmp + '';
         }
         let action = MyData.addExpense(data);
-        action.then(() => renderMain(mainWindow))
-              .catch(error => {
+        action.then(entry => {
+            let saveCommand = MyData.saveCommand('ADD', entry);
+            saveCommand.then(() => renderMain(mainWindow))
+        }).catch(error => {
             showError(error);
         });
     });
@@ -87,7 +93,27 @@ function main () {
     });
 
     ipcMain.on('sync-request', event => {
-        syncronization(mainWindow);
+        if (!syncWindow) {
+            // create a new add todo window
+            syncWindow = new Window({
+                file: path.join('renderer', 'synchronizator.html'),
+                width: 350,
+                height: 550,
+                // close with the main window
+                parent: mainWindow,
+                frame: false
+            });
+            syncWindow.on('show', () => {
+                const syncer = new sync(MyData, settings, syncWindow);
+                syncer.syncronize();
+            });
+
+            // cleanup
+            syncWindow.on('closed', () => {
+                syncWindow = null;
+                renderMain(mainWindow);
+            });
+        }
     })
 }
 
@@ -224,7 +250,6 @@ function passToServer(mainWindow) {
          const send1 = await Model.sendEntriesToRemote(values[0]);
          const send2 = await Model.requestDeletionFromRemote(values[1]);
          Promise.all([send1, send2]).then(someData => {
-             console.log(someData);
              if (someData[1]) {
                  const save = updateLocalBase(someData[1]);
                  save.then(sd => {

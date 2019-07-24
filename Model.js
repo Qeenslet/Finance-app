@@ -15,7 +15,8 @@ class Model {
             'expense_descr TEXT,' +
             'expense_sum TEXT NOT NULL)');
         this.db.run('CREATE TABLE if NOT EXISTS deleted (expense_id TEXT NOT NULL, delete_day TEXT NOT NULL )');
-        //this.db.run('CREATE TABLE if NOT EXISTS settings (section_key TEXT NOT NULL , setting_key TEXT NOT NULL , setting_value TEXT NOT NULL )')
+        //this.db.run('CREATE TABLE if NOT EXISTS settings (section_key TEXT NOT NULL , setting_key TEXT NOT NULL , setting_value TEXT NOT NULL )');
+        this.db.run('CREATE TABLE IF NOT EXISTS operations (command TEXT NOT NULL, chunk_key TEXT, operation_data TEXT NOT NULL)');
     }
 
 
@@ -67,13 +68,31 @@ class Model {
                     (err) => {
                         if (err) reject("Read error: " + err.message);
                         else {
-                            resolve();
+                            entryData.expense_id = id;
+                            resolve(entryData);
                         }
 
                     });
             }
         });
     }
+
+    saveCommand(command, entryData, chunk_key = null) {
+        return new Promise((resolve, reject) => {
+            let d = JSON.stringify(entryData);
+            let sql = 'INSERT INTO operations (command, chunk_key, operation_data) VALUES(?, ?, ?)';
+            this.db.run(sql,
+                [command, chunk_key, d],
+                (err) => {
+                    if (err) reject("Write error: " + err.message);
+                    else {
+                        resolve();
+                    }
+
+                });
+        });
+    }
+
 
     closeConnection() {
         this.db.close();
@@ -92,25 +111,17 @@ class Model {
     }
 
     registerDeletion(entryID) {
-        return new Promise((resolve, reject) => {
-            const today = new Date();
-            let deletedDay = today.toISOString().split('T')[0];
-            let sql = 'INSERT INTO deleted(expense_id, delete_day) VALUES(?, ?)';
-            this.db.run(sql,
-                [entryID, deletedDay],
-                (err) => {
-                    if (err) reject("Read error: " + err.message);
-                    else {
-                        resolve();
-                    }
-
-                });
-        });
+        const today = new Date();
+        let deletedDay = today.toISOString().split('T')[0];
+        const data = {};
+        data.expense_id = entryID;
+        data.delete_day = deletedDay;
+        return this.saveCommand('DEL', data);
     }
 
     getAllSum() {
         return new Promise((resolve, reject) => {
-            let sql = 'SELECT SUM(expense_sum) AS total FROM expenses';
+            let sql = 'SELECT SUM(expense_sum) AS total, COUNT(expense_id) AS entries FROM expenses';
             this.db.get(sql, function(err, row){
                 if (err) reject("Read error: " + err.message)
                 else {
@@ -164,6 +175,57 @@ class Model {
                 if (err) reject("Read error: " + err.message)
                 else {
                     resolve(row);
+                }
+            })
+        });
+    }
+
+
+    getLastOperations() {
+        return new Promise((resolve, reject) => {
+           let sql = 'SELECT command, operation_data FROM operations WHERE chunk_key IS NULL';
+           this.db.all(sql, (err, rows) => {
+               if (err) reject("Read error: " + err.message);
+               else {
+                   resolve(rows);
+               }
+           });
+        });
+    }
+
+
+    setChunkKeys (chunk_key) {
+        return new Promise((resolve, reject) => {
+            let sql = 'UPDATE operations SET chunk_key = ? WHERE chunk_key IS NULL';
+            this.db.run(sql, [chunk_key], err => {
+                if (err) reject("Update error: " + err.message);
+                else {
+                    resolve();
+                }
+            });
+        })
+    }
+
+
+    executeCommand(instruction) {
+        const raw = JSON.parse(instruction.operation_data);
+        if (instruction.command === 'ADD') {
+            return this.addExpense(raw)
+        } else if (instruction.command === 'DEL') {
+            return this.deleteEntry(raw.expense_id)
+        }
+    }
+
+
+    getLastChunk() {
+        return new Promise((resolve, reject) => {
+           let sql = 'SELECT chunk_key FROM operations WHERE chunk_key IS NOT NULL ORDER BY rowid DESC';
+            this.db.get(sql, function(err, row){
+                if (err) reject("Read error: " + err.message)
+                else {
+                    if (row && row.chunk_key) {
+                        resolve(row.chunk_key);
+                    } else resolve(null);
                 }
             })
         });
