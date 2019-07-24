@@ -63,16 +63,23 @@ class Model {
                 }
                 if (!entryData.expense_descr) description = '';
                 else description = entryData.expense_descr;
-                this.db.run(sql,
-                    [id, entryData.expense_date, entryData.expense_categ, description, entryData.expense_sum],
-                    (err) => {
-                        if (err) reject("Read error: " + err.message);
-                        else {
-                            entryData.expense_id = id;
-                            resolve(entryData);
-                        }
+                const check = this.checkEntry(id);
+                check.then(row => {
+                    if (row && row.expense_id) {
+                        resolve();
+                    } else {
+                        this.db.run(sql,
+                            [id, entryData.expense_date, entryData.expense_categ, description, entryData.expense_sum],
+                            (err) => {
+                                if (err) reject("Read error: " + err.message);
+                                else {
+                                    entryData.expense_id = id;
+                                    resolve(entryData);
+                                }
 
-                    });
+                            });
+                    }
+                })
             }
         });
     }
@@ -209,13 +216,17 @@ class Model {
 
     executeCommand(instruction) {
         const raw = JSON.parse(instruction.operation_data);
+
+        const promises = [];
+        promises.push(this.saveCommand(instruction.command, raw, instruction.chunk_key));
         if (instruction.command === 'ADD') {
             console.log('Adding ' + raw.expense_id);
-            return this.addExpense(raw)
+            promises.push(this.addExpense(raw));
         } else if (instruction.command === 'DEL') {
             console.log('Deleting ' + raw.expense_id);
-            return this.deleteEntry(raw.expense_id)
+            promises.push(this.deleteEntry(raw.expense_id))
         }
+        return Promise.all(promises);
     }
 
 
