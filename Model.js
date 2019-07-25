@@ -220,10 +220,10 @@ class Model {
         const promises = [];
         promises.push(this.saveCommand(instruction.command, raw, instruction.chunk_key));
         if (instruction.command === 'ADD') {
-            console.log('Adding ' + raw.expense_id);
+            console.log('Adding ' + raw.expense_id + ' key: ' + instruction.chunk_key);
             promises.push(this.addExpense(raw));
         } else if (instruction.command === 'DEL') {
-            console.log('Deleting ' + raw.expense_id);
+            console.log('Deleting ' + raw.expense_id + ' key: ' + instruction.chunk_key);
             promises.push(this.deleteEntry(raw.expense_id))
         }
         return Promise.all(promises);

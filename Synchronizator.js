@@ -24,7 +24,7 @@ class Synchronizator {
 
     }
 
-    compare(remote, local) {
+    async compare(remote, local) {
         this.percent++;
         //remote.sum, remote.entries local.total, local.entries
         if (remote.sum != local.total) {
@@ -33,17 +33,16 @@ class Synchronizator {
             } else {
                 //request chunks
                 //this.uploadOperations();
-                const req = this.myData.getLastChunk();
-                req.then(chunk_key => {
+                try {
+                    const chunk_key = await this.myData.getLastChunk();
                     this.updateWindow('Last chunk is ' + chunk_key);
-                    const remoteChunks = this.recieveChunks(chunk_key);
-                    remoteChunks.then(data => {
-                        const doChunks = this.executeRemoteChunks(data, chunk_key);
-                        doChunks.then(() => this.uploadOperations())
-                                .catch(() => this.terminateUpdate())
-                    });
-                });
-
+                    const remoteChunks = await this.recieveChunks(chunk_key);
+                    const doChunks = await this.executeRemoteChunks(remoteChunks, chunk_key);
+                    this.uploadOperations();
+                } catch(error) {
+                    this.terminateUpdate();
+                    console.log(error);
+                }
             }
         } else {
             this.percent = 100;
@@ -131,8 +130,8 @@ class Synchronizator {
     }
 
 
-    executeRemoteChunks(data, chunk_key) {
-        return new Promise((resolve, reject) => {
+    async executeRemoteChunks(data, chunk_key) {
+        return new Promise(async (resolve, reject) => {
             if (data.chunks) {
                 let step = parseInt((100 - this.percent) / data.chunks.length);
                 this.updateWindow('chunks recieved');
@@ -140,19 +139,12 @@ class Synchronizator {
                     this.updateWindow('No new chunks...');
                     resolve();
                 }
-                const proms = [];
-                data.chunks.forEach(chunk => {
-                    if (chunk !== chunk_key) {
-                        proms.push(this.runChunk(chunk, step));
-                    }
+                console.log(data.chunks);
+                //const proms = [];
 
-                });
-                Promise.all(proms).then(() => {
-                    resolve();
-                }).catch(error => {
-                    console.log(error);
-                    reject();
-                })
+                const chunkResolve = await this.queueChunks(data.chunks, step);
+
+                resolve();
             } else {
                 this.updateWindow('No data recieve about chunks');
                 resolve();
@@ -179,6 +171,11 @@ class Synchronizator {
                 return Promise.all(proms);
             }).then(() => resolve());
         });
+    }
+    async queueChunks (chunks, step) {
+        for (let index = 0; index < chunks.length; index++) {
+            await this.runChunk(chunks[index], step);
+        }
     }
 
 
