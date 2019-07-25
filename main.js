@@ -124,6 +124,11 @@ function main () {
     ipcMain.on('terminate', event => {
         mainWindow.close();
     });
+
+    ipcMain.on('minimize', event => {
+        mainWindow.minimize();
+
+    });
 }
 
 /**

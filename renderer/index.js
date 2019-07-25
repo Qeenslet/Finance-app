@@ -165,5 +165,8 @@ function closeProgramm() {
             ipcRenderer.send('terminate');
         }
     })
+}
 
+function minProgramm() {
+    ipcRenderer.send('minimize');
 }

@@ -8,3 +8,6 @@ textarea,
 li {
     -webkit-app-region: no-drag;
 }
+.btn-outline-dark:focus {
+    box-shadow: none;
+}
