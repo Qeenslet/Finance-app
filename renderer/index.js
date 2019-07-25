@@ -1,6 +1,7 @@
 'use strict'
 
 const { ipcRenderer } = require('electron');
+const { dialog } = require('electron').remote;
 const categoryZone = 'spentsList';
 const categoryZone2 = 'incomesList';
 const allList = 'entry_list';
@@ -117,7 +118,7 @@ ipcRenderer.on('update-sync', (event, string) => {
  * @param entryID
  */
 function deleteEntry(entryID) {
-    const {dialog} = require('electron').remote;
+    //const {dialog} = require('electron').remote;
     const options = {type: 'question', buttons: ['Ok', 'Cancel'], message: 'Delete this entry?'};
     dialog.showMessageBox(options, i => {
         if (!i) {
@@ -156,5 +157,13 @@ function syncronize() {
 }
 
 function closeProgramm() {
-    ipcRenderer.send('terminate-all');
+    const options = {type: 'question', buttons: ['Sync', 'Exit'], message: 'Do you want to sync data before exit?'};
+    dialog.showMessageBox(options, i => {
+        if (!i) {
+            ipcRenderer.send('terminate-sync');
+        } else {
+            ipcRenderer.send('terminate');
+        }
+    })
+
 }

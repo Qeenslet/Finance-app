@@ -2,7 +2,7 @@
 
 const path = require('path');
 
-const { app, ipcMain, dialog, remote } = require('electron');
+const { app, ipcMain, dialog } = require('electron');
 
 const Window = require('./Window');
 
@@ -107,7 +107,7 @@ function main () {
             });
         }
     });
-    ipcMain.on('terminate-all', event => {
+    ipcMain.on('terminate-sync', event => {
         if (!syncWindow) {
             syncWindow = getSyncWindow(mainWindow);
             syncWindow.on('show', () => {
@@ -120,6 +120,9 @@ function main () {
                 mainWindow.close();
             });
         }
+    });
+    ipcMain.on('terminate', event => {
+        mainWindow.close();
     });
 }
 
