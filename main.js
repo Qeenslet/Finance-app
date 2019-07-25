@@ -2,7 +2,7 @@
 
 const path = require('path');
 
-const { app, ipcMain, dialog } = require('electron');
+const { app, ipcMain, dialog, remote } = require('electron');
 
 const Window = require('./Window');
 
@@ -94,15 +94,7 @@ function main () {
 
     ipcMain.on('sync-request', event => {
         if (!syncWindow) {
-            // create a new add todo window
-            syncWindow = new Window({
-                file: path.join('renderer', 'synchronizator.html'),
-                width: 350,
-                height: 550,
-                // close with the main window
-                parent: mainWindow,
-                frame: false
-            });
+            syncWindow = getSyncWindow(mainWindow);
             syncWindow.on('show', () => {
                 const syncer = new sync(MyData, settings, syncWindow);
                 syncer.syncronize();
@@ -114,7 +106,21 @@ function main () {
                 renderMain(mainWindow);
             });
         }
-    })
+    });
+    ipcMain.on('terminate-all', event => {
+        if (!syncWindow) {
+            syncWindow = getSyncWindow(mainWindow);
+            syncWindow.on('show', () => {
+                const syncer = new sync(MyData, settings, syncWindow);
+                syncer.syncronize();
+            });
+
+            // cleanup
+            syncWindow.on('closed', () => {
+                mainWindow.close();
+            });
+        }
+    });
 }
 
 /**
@@ -191,147 +197,15 @@ function renderEntriesForCateg(mainWindow, category, desiredMonth) {
     return '1999-01-01';
  }
 
-/**
- * Synchronization of local and remote databases
- *
- * @param mainWindow
- */
-function syncronization(mainWindow) {
-     mainWindow.webContents.send('update-sync', 'Requesting remote server');
-     let req = Model.requestRemoteSummary();
-     req.then(response => response.json())
-         .then(serverData => {
-             mainWindow.webContents.send('update-sync', 'Response recieved');
-             let req2 = MyData.getAllSum();
-             req2.then(row => {
-                 let req3 = MyData.getAllNumber();
-                 req3.then(row2 => {
-                     compareSync(serverData, row, row2, mainWindow);
-                 })
-             })
-         }).catch( error => {
-         mainWindow.webContents.send('update-sync', 'Error: ' + error);
-     })
- }
 
-/**
- * Compare response from remote with local data, decide what to do
- * @param r
- * @param sum
- * @param total
- * @param mainWindow
- */
- function compareSync(r, sum, total, mainWindow) {
-     if (r.summary.entries != total.total && r.summary.sum != sum.total) {
-        if (r.summary.entries == 0 || r.summary.entries < total.total) {
-            //Remote storage is empty or there are less entries
-            passToServer(mainWindow);
-        } else if (r.summary.entries > total.total) {
-            //There are more entries in remote storage than in local
-            applyFromServer(mainWindow);
-        }
-        syncronization(mainWindow);
-    } else if (r.summary.sum != sum.total) {
-         passToServer(mainWindow)
-
-     } else {
-         mainWindow.webContents.send('update-sync', 'Data is up to date!');
-     }
- }
-
-/**
- * Send entries to server, apply deletes from server
- * @param mainWindow
- */
-function passToServer(mainWindow) {
-     let req = MyData.getAllEntries();
-     let del = MyData.getAllDeletions();
-     Promise.all([req, del]).then(async values => {
-         const send1 = await Model.sendEntriesToRemote(values[0]);
-         const send2 = await Model.requestDeletionFromRemote(values[1]);
-         Promise.all([send1, send2]).then(someData => {
-             if (someData[1]) {
-                 const save = updateLocalBase(someData[1]);
-                 save.then(sd => {
-                    renderMain(mainWindow);
-                    syncronization(mainWindow);
-                 });
-             }
-             mainWindow.webContents.send('update-sync', 'Data saved on remote server!');
-
-         }).catch(error => {
-             mainWindow.webContents.send('update-sync', 'Error: ' + error);
-         });
+ function getSyncWindow(mainWindow) {
+     return new Window({
+         file: path.join('renderer', 'synchronizator.html'),
+         width: 350,
+         height: 550,
+         parent: mainWindow,
+         frame: false
      });
- }
-
-/**
- * Send deletes to server, apply response
- * @param mainWindow
- */
-function applyFromServer(mainWindow) {
-     mainWindow.webContents.send('update-sync', 'Synchronizing local and remote storage');
-     let del = MyData.getAllDeletions();
-     del.then(value => {
-         //be sure that deletions on client side count
-         let send2 = Model.requestDeletionFromRemote(value);
-         send2.then(serverData => {
-             //mainWindow.webContents.send('update-sync', 'Data saved on remote server!');
-             const save = updateLocalBase(serverData);
-             save.then(sd => {
-                renderMain(mainWindow);
-                syncronization(mainWindow);
-             });
-             mainWindow.webContents.send('update-sync', 'Synchronization completed, updating');
-         });
-     });
-
- }
-
-/**
- * Update local database
- * @param serverData
- * @returns {Promise<[void, [any, any, any, any, any, any, any, any, any, any]]>}
- */
- async function updateLocalBase(serverData) {
-
-     const entries = await checkEntries(serverData.entries.real);
-     const deletes = await updateDeletes(serverData.entries.deleted)
-     return Promise.all([entries, deletes]);
- }
-
-/**
- * Check and save entries if needed
- * @param real
- * @returns {Promise<void>}
- */
- async function checkEntries(real) {
-     const promises = [];
-     real.forEach(entry => {
-         promises.push(MyData.checkEntry(entry.expense_id));
-     });
-     Promise.all(promises).then(results => {
-         const proms2 = [];
-         results.forEach((row, index) => {
-             if (!row || !row.expense_id) {
-                 proms2.push(MyData.addExpense(real[index]));
-             }
-         });
-         return Promise.all(proms2);
-     });
- }
-
-/**
- * Update deletes
- * @param deleted
- * @returns {Promise<[any, any, any, any, any, any, any, any, any, any]>}
- */
- async function updateDeletes(deleted) {
-     const promises = [];
-     deleted.forEach(del => {
-         promises.push(MyData.deleteEntry(del.expense_id));
-     });
-     return Promise.all(promises);
  }
 
 

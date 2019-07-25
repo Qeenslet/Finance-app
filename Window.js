@@ -3,12 +3,13 @@
 const { BrowserWindow } = require('electron')
 
 const defaultProps = {
-    width: 1600,
+    width: 1550,
     height: 1200,
     show: false,
     webPreferences: {
         nodeIntegration: true
-    }
+    },
+    frame: false
 }
 
 class Window extends BrowserWindow {

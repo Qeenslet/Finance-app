@@ -154,3 +154,7 @@ function selectCateg(categ, month) {
 function syncronize() {
     ipcRenderer.send('sync-request');
 }
+
+function closeProgramm() {
+    ipcRenderer.send('terminate-all');
+}
