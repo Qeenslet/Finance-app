@@ -1,5 +1,4 @@
 const sqlite3 = require('sqlite3').verbose();
-const settings = require('./extapi');
 const fetch = require("node-fetch");
 class Model {
     constructor() {
@@ -15,7 +14,7 @@ class Model {
             'expense_descr TEXT,' +
             'expense_sum TEXT NOT NULL)');
         this.db.run('CREATE TABLE if NOT EXISTS deleted (expense_id TEXT NOT NULL, delete_day TEXT NOT NULL )');
-        //this.db.run('CREATE TABLE if NOT EXISTS settings (section_key TEXT NOT NULL , setting_key TEXT NOT NULL , setting_value TEXT NOT NULL )');
+        this.db.run('CREATE TABLE if NOT EXISTS settings (section_key TEXT NOT NULL , setting_key TEXT NOT NULL , setting_value TEXT NOT NULL )');
         this.db.run('CREATE TABLE IF NOT EXISTS operations (command TEXT NOT NULL, chunk_key TEXT, operation_data TEXT NOT NULL)');
     }
 
@@ -244,43 +243,32 @@ class Model {
         });
     }
 
-    //getSetting
-
-
-
-    static requestRemoteSummary() {
-        let apiString = settings.server + "/" + settings.apikey + "/summary";
-        return fetch(apiString);
+    getSettings(key) {
+        return new Promise((resolve, reject) => {
+            let sql = 'SELECT setting_key, setting_value FROM settings WHERE section_key = ?';
+            this.db.all(sql, [key], function(err, rows){
+                if (err) reject("Read error: " + err.message)
+                else {
+                    resolve(rows);
+                }
+            })
+        });
     }
 
-    static sendEntriesToRemote(entries) {
-        let apiString = settings.server + "/" + settings.apikey + "/entries";
-        let d = JSON.stringify(entries);
-        return fetch(apiString, {
-            method: 'POST',
-            mode: 'cors',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: d
-        }).then(response => {
-            return response.json()
-            });
+    saveSetting(section, key, value) {
+        return new Promise((resolve, reject) => {
+            let sql = 'INSERT INTO settings (section_key, setting_key, setting_value) VALUES(?, ?, ?)';
+            this.db.run(sql,
+                [section, key, value],
+                (err) => {
+                    if (err) reject("Write error: " + err.message);
+                    else {
+                        resolve();
+                    }
+
+                });
+        });
     }
 
-    static requestDeletionFromRemote(entries) {
-        let apiString = settings.server + "/" + settings.apikey + "/entries";
-        let d = JSON.stringify(entries);
-        return fetch(apiString, {
-            method: 'DELETE',
-            mode: 'cors',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: d
-        }).then(response => {
-            return response.json()
-            });
-    }
 }
 module.exports = Model;

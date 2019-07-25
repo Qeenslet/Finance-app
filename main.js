@@ -7,15 +7,13 @@ const { app, ipcMain, dialog } = require('electron');
 const Window = require('./Window');
 
 const Model = require('./Model');
+const Sets = require('./Settings');
 
-const categs = require('./categs');
-
-const incomes = require('./incomes');
 
 const sync = require('./Synchronizator');
-const settings = require('./extapi');
 
 const MyData = new Model();
+const mySettings = new Sets(MyData);
 
 /**
  * Main app function
@@ -47,7 +45,9 @@ function main () {
                 parent: mainWindow,
                 frame: false
             });
-            addExpenseWin.on('show', () => {
+            addExpenseWin.on('show', async () => {
+                const incomes = await mySettings.getIncomes();
+                const categs = await mySettings.getExpenses();
                 addExpenseWin.webContents.send('open-add-window', incomes, categs);
             });
 
@@ -58,7 +58,8 @@ function main () {
         }
     });
     // Add entry event
-    ipcMain.on('add-entry', (event, data) => {
+    ipcMain.on('add-entry', async (event, data) => {
+        const categs = await mySettings.getExpenses();
         if (categs[data.expense_categ] && parseFloat(data.expense_sum) > 0) {
             let tmp = data.expense_sum;
             tmp *= -1;
@@ -92,7 +93,8 @@ function main () {
         renderEntriesForCateg(mainWindow, categ, month);
     });
 
-    ipcMain.on('sync-request', event => {
+    ipcMain.on('sync-request', async event => {
+        const settings = await mySettings.getApiSettings();
         if (!syncWindow) {
             syncWindow = getSyncWindow(mainWindow);
             syncWindow.on('show', () => {
@@ -107,7 +109,8 @@ function main () {
             });
         }
     });
-    ipcMain.on('terminate-sync', event => {
+    ipcMain.on('terminate-sync', async event => {
+        const settings = await mySettings.getApiSettings();
         if (!syncWindow) {
             syncWindow = getSyncWindow(mainWindow);
             syncWindow.on('show', () => {
@@ -137,7 +140,9 @@ function main () {
  * @param mainWindow
  * @param desiredDate
  */
-function renderMain(mainWindow, desiredDate = null) {
+async function renderMain(mainWindow, desiredDate = null) {
+    const categs = await mySettings.getExpenses();
+    const incomes = await mySettings.getIncomes();
     const date = desiredDate ? new Date(desiredDate) : new Date();
     const firstDate = splitDate(new Date(date.getFullYear(), date.getMonth(), 1));
     const lastDate = splitDate(new Date(date.getFullYear(), date.getMonth() + 1, 0));
@@ -183,7 +188,9 @@ function renderMain(mainWindow, desiredDate = null) {
  * @param category
  * @param desiredMonth
  */
-function renderEntriesForCateg(mainWindow, category, desiredMonth) {
+async function renderEntriesForCateg(mainWindow, category, desiredMonth) {
+    const categs = await mySettings.getExpenses();
+    const incomes = await mySettings.getIncomes();
     const date = new Date(desiredMonth);
     const firstDate = splitDate(new Date(date.getFullYear(), date.getMonth(), 1));
     const lastDate = splitDate(new Date(date.getFullYear(), date.getMonth() + 1, 0));
