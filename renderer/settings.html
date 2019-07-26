@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Settings</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="./bootstrap.min.css">
+</head>
+<body>
+<div class="container">
+    <h2>Application settings</h2>
+    <ul class="nav nav-tabs">
+        <li class="nav-item">
+            <span class="nav-link active" id="incomes_tab" onclick="changeTab('incomes')" style="cursor: pointer">Incomes</span>
+        </li>
+        <li class="nav-item">
+            <span class="nav-link" id="expense_tab" onclick="changeTab('expense')" style="cursor: pointer">Expenses</span>
+        </li>
+        <li class="nav-item">
+            <span class="nav-link" id="api_tab" onclick="changeTab('api')" style="cursor: pointer">Server settings</span>
+        </li>
+    </ul>
+    <div style="margin-top: 5px; margin-bottom: 5px">
+        <div style="width: 100%" id="settingZone"></div>
+        <input type="button" id="addNew" class="btn btn-success" value="Add new" onclick="">
+    </div>
+    <input type="button" class="btn btn-outline-success" value="Save" onclick="">
+    <input type="button" class="btn btn-outline-secondary" value="Close" onclick="closeThisWindow()">
+</div>
+<script src="./sets.js"></script>
+</body>
+</html>

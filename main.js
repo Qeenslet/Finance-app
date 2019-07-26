@@ -25,6 +25,7 @@ function main () {
     // Main window display
     let addExpenseWin;
     let syncWindow;
+    let setsWindow;
     const date = new Date();
     const firstDate = splitDate(new Date(date.getFullYear(), date.getMonth(), 1));
     const lastDate = splitDate(new Date(date.getFullYear(), date.getMonth() + 1, 0));
@@ -131,6 +132,25 @@ function main () {
     ipcMain.on('minimize', event => {
         mainWindow.minimize();
 
+    });
+
+    ipcMain.on('settings', event => {
+        if (!setsWindow) {
+            setsWindow = new Window({
+                file: path.join('renderer', 'settings.html'),
+                width: 500,
+                height: 700,
+                // close with the main window
+                parent: mainWindow,
+                frame: false
+            });
+            setsWindow.on('show', () => {
+                setsWindow.webContents.send('display-setts');
+            });
+            setsWindow.on('closed', () => {
+                setsWindow = null;
+            });
+        }
     });
 }
 

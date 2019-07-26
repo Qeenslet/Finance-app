@@ -270,5 +270,20 @@ class Model {
         });
     }
 
+
+    checkSettingUsage(setting) {
+        return new Promise((resolve, reject) => {
+           let sql = 'SELECT COUNT(expense_id) AS amt FROM expenses WHERE expense_categ = ?';
+            this.db.get(sql, [setting], function(err, row){
+                if (err) reject("Read error: " + err.message)
+                else {
+                    if (row && row.amt) {
+                        resolve(row.amt);
+                    } else resolve(null);
+                }
+            })
+        });
+    }
+
 }
 module.exports = Model;

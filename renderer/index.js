@@ -170,3 +170,8 @@ function closeProgramm() {
 function minProgramm() {
     ipcRenderer.send('minimize');
 }
+
+
+function launchSettings() {
+    ipcRenderer.send('settings');
+}

@@ -1,5 +1,6 @@
 'use strict'
 
+
 class Settings {
     constructor (myData) {
         this.myData = myData;
@@ -8,7 +9,7 @@ class Settings {
         this.api_key = 'api';
     }
 
-    async getIncomes() {
+    async getIncomes(toEdit = false) {
         const incomes = await this.myData.getSettings(this.incomes_key);
         if (! incomes.length) {
             const defs = require('./incomes');
@@ -17,11 +18,11 @@ class Settings {
             }
             return defs;
         } else {
-            return this.prepareResult(incomes);
+            return this.prepareResult(incomes, toEdit);
         }
     }
 
-    async getExpenses() {
+    async getExpenses(toEdit = false) {
         const expenses = await this.myData.getSettings(this.expense_key);
         if (! expenses.length) {
             const defs = require('./categs');
@@ -30,11 +31,11 @@ class Settings {
             }
             return defs;
         } else {
-            return this.prepareResult(expenses);
+            return this.prepareResult(expenses, toEdit);
         }
     }
 
-    async getApiSettings () {
+    async getApiSettings (toEdit = false) {
         const api = await this.myData.getSettings(this.api_key);
         if (! api.length) {
             const defs = require('./extapi');
@@ -43,17 +44,28 @@ class Settings {
             }
             return defs;
         } else {
-            return this.prepareResult(api);
+            return this.prepareResult(api, toEdit);
         }
     }
 
 
-    prepareResult(array) {
-        const result = {};
-        array.forEach(line => {
-            result[line['setting_key']] = line['setting_value']
-        });
-        return result;
+    async prepareResult(array, toEdit) {
+        if (toEdit) {
+            const result = [];
+            for (let i = 0; i < array.length; i++) {
+                const obj = array[i];
+                obj.used = await this.myData.checkSettingUsage(obj.setting_key);
+                result.push(obj);
+            }
+            return result;
+        } else {
+            const result = {};
+            array.forEach(line => {
+                result[line['setting_key']] = line['setting_value']
+            });
+            return result;
+        }
+
     }
 }
 module.exports = Settings;
