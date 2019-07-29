@@ -5,7 +5,8 @@ input,
 button,
 select,
 textarea,
-li {
+li,
+.overflowable{
     -webkit-app-region: no-drag;
 }
 .btn-outline-dark:focus {

@@ -7,25 +7,29 @@
     <link rel="stylesheet" href="./bootstrap.min.css">
 </head>
 <body>
-<div class="container">
-    <h2>Application settings</h2>
-    <ul class="nav nav-tabs">
-        <li class="nav-item">
-            <span class="nav-link active" id="incomes_tab" onclick="changeTab('incomes')" style="cursor: pointer">Incomes</span>
-        </li>
-        <li class="nav-item">
-            <span class="nav-link" id="expense_tab" onclick="changeTab('expense')" style="cursor: pointer">Expenses</span>
-        </li>
-        <li class="nav-item">
-            <span class="nav-link" id="api_tab" onclick="changeTab('api')" style="cursor: pointer">Server settings</span>
-        </li>
-    </ul>
-    <div style="margin-top: 5px; margin-bottom: 5px">
-        <div style="width: 100%" id="settingZone"></div>
-        <input type="button" id="addNew" class="btn btn-success" value="Add new" onclick="">
+<div class="container" style="display: flex; flex-direction: column" >
+    <div class="column col-12">
+        <h2 class="text-center">Application settings</h2>
+        <ul class="nav nav-tabs">
+            <li class="nav-item">
+                <span class="nav-link active" id="incomes_tab" onclick="changeTab('incomes')" style="cursor: pointer">Incomes</span>
+            </li>
+            <li class="nav-item">
+                <span class="nav-link" id="expense_tab" onclick="changeTab('expense')" style="cursor: pointer">Expenses</span>
+            </li>
+            <li class="nav-item">
+                <span class="nav-link" id="api_tab" onclick="changeTab('api')" style="cursor: pointer">Server settings</span>
+            </li>
+        </ul>
+        <div class="overflowable" style="margin-top: 5px; margin-bottom: 5px; height: 540px; overflow: auto">
+            <div style="width: 100%" id="settingZone"></div>
+            <input type="button" id="addNew" class="btn btn-success" value="Add new" onclick="">
+        </div>
     </div>
-    <input type="button" class="btn btn-outline-success" value="Save" onclick="">
-    <input type="button" class="btn btn-outline-secondary" value="Close" onclick="closeThisWindow()">
+    <div class="column col-12" style="margin-top: 10px">
+        <input type="button" class="btn btn-outline-success" value="Save" onclick="">
+        <input type="button" class="btn btn-outline-secondary" value="Close" onclick="closeThisWindow()">
+    </div>
 </div>
 <script src="./sets.js"></script>
 </body>
