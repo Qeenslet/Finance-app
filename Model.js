@@ -285,5 +285,44 @@ class Model {
         });
     }
 
+    updateSetting(section, key, value) {
+        return new Promise((resolve, reject) => {
+            let sql = 'UPDATE settings SET setting_value = ? WHERE section_key = ? AND setting_key = ?';
+            this.db.run(sql, [value, section, key], err => {
+                if (err) reject("Update error: " + err.message);
+                else {
+                    resolve();
+                }
+            });
+        })
+    }
+
+    getSetting(section, key) {
+        return new Promise((resolve, reject) => {
+            let sql = 'SELECT setting_value FROM settings WHERE section_key = ? AND setting_key = ?';
+            this.db.get(sql, [section, key], function(err, row){
+                if (err) reject("Read error: " + err.message)
+                else {
+                    if (row && row.setting_value) {
+                        resolve(row.setting_value);
+                    } else resolve(null);
+                }
+            })
+        });
+    }
+
+
+    deleteSetting(section, key) {
+        return new Promise((resolve, reject) => {
+            let sql = 'DELETE FROM settings WHERE section_key = ? AND setting_key = ?';
+            this.db.run(sql, [section, key], err => {
+                if (err) reject("Delete error: " + err.message);
+                else {
+                    resolve();
+                }
+            });
+        })
+    }
+
 }
 module.exports = Model;

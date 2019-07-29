@@ -67,5 +67,44 @@ class Settings {
         }
 
     }
+
+    async saveSettings(localChanges) {
+        const possible = [];
+        possible.push(this.incomes_key);
+        possible.push(this.expense_key);
+        possible.push(this.api_key);
+        for (let i = 0; i < possible.length; i++) {
+            if (localChanges[possible[i]]) {
+                await this.iterateChangesInSection(localChanges[possible[i]], possible[i]);
+            }
+        }
+        if (localChanges.deleted) {
+            for (let i = 0; i < possible.length; i++) {
+                if (localChanges.deleted[possible[i]]) {
+                    await this.iterateDeletionsInSection(localChanges.deleted[possible[i]], possible[i]);
+                }
+            }
+        }
+    }
+
+    async iterateChangesInSection(sectionObj, section) {
+        for (let k in sectionObj) {
+            const set = await this.myData.getSetting(section, k);
+            if (set) {
+                await this.myData.updateSetting(section, k, sectionObj[k]);
+            } else {
+                await this.myData.saveSetting(section, k, sectionObj[k]);
+            }
+        }
+    }
+
+    async iterateDeletionsInSection(sectionObj, section) {
+        for (let k in sectionObj) {
+            const check = await this.myData.checkSettingUsage(k);
+            if (!check) {
+                await this.myData.deleteSetting(section, k);
+            }
+        }
+    }
 }
 module.exports = Settings;

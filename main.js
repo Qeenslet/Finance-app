@@ -149,6 +149,7 @@ function main () {
             });
             setsWindow.on('closed', () => {
                 setsWindow = null;
+                renderMain(mainWindow);
             });
         }
     });
