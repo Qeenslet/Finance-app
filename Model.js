@@ -324,5 +324,17 @@ class Model {
         })
     }
 
+    getUserFinanceSettings() {
+        return new Promise((resolve, reject) => {
+            let sql = 'SELECT section_key, setting_key, setting_value FROM settings WHERE section_key != ?';
+            this.db.all(sql, ['api'], function(err, rows){
+                if (err) reject("Read error: " + err.message)
+                else {
+                    resolve(rows);
+                }
+            })
+        });
+    }
+
 }
 module.exports = Model;

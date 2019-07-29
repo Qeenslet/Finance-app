@@ -3,6 +3,7 @@ const { ipcRenderer, remote } = require('electron');
 const { dialog } = require('electron').remote;
 const Sets = require('../Settings');
 const Model = require('../Model');
+const syncronizator = require('../Synchronizator');
 
 const myData = new Model();
 const mySettings = new Sets(myData);
@@ -15,13 +16,20 @@ ipcRenderer.on('display-setts', event => {
     displaySettings(default_tab);
 });
 
+ipcRenderer.on('update', (event, percent, status) => {
+    const progressBar = document.getElementById('sync_progress');
+    progressBar.setAttribute('aria-valuenow', percent);
+    progressBar.setAttribute('style', 'width:' + percent + '%');
+    progressBar.innerHTML = percent + '%';
+    const statusWindow = document.getElementById('sync_status');
+    statusWindow.innerHTML += '<p><small>' + status + '</small></p>';
+    statusWindow.scrollTop = statusWindow.scrollHeight;
+});
+
 async function displaySettings(key) {
     current_tab = key;
     let array;
-    const tabs = document.getElementsByClassName('nav-link');
-    for (let i = 0; i < tabs.length; i++) {
-        tabs[i].classList.remove('active');
-    }
+    unfocusTabs();
     switch (key) {
         case 'incomes':
             array = await mySettings.getIncomes(true);
@@ -79,7 +87,21 @@ function formString(setting, key) {
 
 
 function changeTab(tab) {
-    displaySettings(tab);
+    const container1 = document.getElementById('mainSetting');
+    const container2 = document.getElementById('syncSetting');
+
+    if (tab !== 'sync') {
+        container1.style.display = 'block';
+        container2.style.display = 'none';
+        displaySettings(tab);
+    } else {
+        container1.style.display = 'none';
+        container2.style.display = 'block';
+        unfocusTabs();
+        const tab = document.getElementById('sync_tab');
+        tab.classList.add('active');
+    }
+
 }
 
 function closeThisWindow() {
@@ -140,5 +162,66 @@ function deleteSetting(key) {
     if (!localChanges.deleted[current_tab]) localChanges.deleted[current_tab] = {};
     localChanges.deleted[current_tab][key] = true;
     displaySettings(current_tab);
+}
+
+async function pushSettings() {
+    try {
+        const settings = await myData.getUserFinanceSettings();
+        const api_settings = await mySettings.getApiSettings();
+        const w = remote.getCurrentWindow();
+        const sync = new syncronizator(myData, api_settings, w);
+        const response = await sync.postSettings(settings);
+        if (response.settings) {
+            dialog.showMessageBox(null, {
+                type: 'info',
+                message: 'Local settings successfully saved',
+                buttons: ['Ok']
+            });
+        } else {
+            dialog.showMessageBox(null, {
+                type: 'error',
+                message: 'Remote server unavailable',
+                buttons: ['Ok']
+            });
+        }
+    } catch (error) {
+        dialog.showMessageBox(null, {
+            type: 'error',
+            message: 'Some error has happened, contact the developer',
+            buttons: ['Ok']
+        });
+        console.log(error);
+    }
+}
+
+async function getRemoteSettings() {
+    try {
+        const api_settings = await mySettings.getApiSettings();
+        const w = remote.getCurrentWindow();
+        const sync = new syncronizator(myData, api_settings, w);
+        const rem = await sync.getSettings();
+        await mySettings.applyRemoteSettings(rem);
+        dialog.showMessageBox(null, {
+            type: 'info',
+            message: 'Remote changes has been applied!',
+            buttons: ['Ok']
+        });
+    } catch (e) {
+        dialog.showMessageBox(null, {
+            type: 'error',
+            message: 'Some error has happened, contact the developer',
+            buttons: ['Ok']
+        });
+        console.log(e);
+    }
+
+}
+
+
+function unfocusTabs() {
+    const tabs = document.getElementsByClassName('nav-link');
+    for (let i = 0; i < tabs.length; i++) {
+        tabs[i].classList.remove('active');
+    }
 }
 

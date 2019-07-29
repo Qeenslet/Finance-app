@@ -178,6 +178,37 @@ class Synchronizator {
         }
     }
 
+    getSettings() {
+        this.percent = 50;
+        this.updateWindow('Preparing a request');
+        let apiString = this.settings.server + "/" + this.settings.apikey + "/settings";
+        return fetch(apiString).then(response => {
+            this.percent = 100;
+            this.updateWindow('Response recieved!');
+            return response.json()
+        });
+    }
+
+    postSettings(settings) {
+        this.percent = 25;
+        this.updateWindow('Preparing a request');
+        let apiString = this.settings.server + "/" + this.settings.apikey + "/settings";
+        let d = JSON.stringify(settings);
+        return fetch(apiString, {
+            method: 'POST',
+            mode: 'cors',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: d
+        }).then(response => {
+            this.percent = 100;
+            this.updateWindow('Response recieved!');
+            return response.json()
+        });
+    }
+
+
 
 
 
