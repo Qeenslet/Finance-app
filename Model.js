@@ -1,5 +1,4 @@
 const sqlite3 = require('sqlite3').verbose();
-const fetch = require("node-fetch");
 class Model {
     constructor() {
         this.db = new sqlite3.Database('./expenses.db', (err) => {

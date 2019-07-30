@@ -83,20 +83,22 @@ class Synchronizator {
     }
 
     requestRemoteSummary() {
-        let apiString = this.settings.server + "/" + this.settings.apikey + "/summary";
-        return fetch(apiString).then(response => response.json());
+        let apiString = this.settings.server + "/summary";
+        const headers = this.getHeaders();
+        return fetch(apiString, {
+            headers: headers
+        }).then(response => response.json());
     }
 
 
     sendOperationsToRemote(operations) {
-        let apiString = this.settings.server + "/" + this.settings.apikey + "/operations";
+        let apiString = this.settings.server + "/operations";
         let d = JSON.stringify(operations);
+        const headers = this.getHeaders(true);
         return fetch(apiString, {
             method: 'POST',
             mode: 'cors',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: headers,
             body: d
         }).then(response => {
             return response.json()
@@ -106,17 +108,23 @@ class Synchronizator {
     recieveChunks (chunk_key) {
         let apiString;
         if (chunk_key) {
-            apiString = this.settings.server + "/" + this.settings.apikey + "/next_chunks/" + chunk_key
+            apiString = this.settings.server + "/next_chunks/" + chunk_key
         } else {
-            apiString = this.settings.server + "/" + this.settings.apikey + "/chunks";
+            apiString = this.settings.server + "/chunks";
         }
-        return fetch(apiString).then(response => response.json());
+        const headers = this.getHeaders();
+        return fetch(apiString, {
+            headers: headers
+        }).then(response => response.json());
     }
 
 
     getChunkOperations(chunk_key) {
-        let apiString = this.settings.server + "/" + this.settings.apikey + "/chunk/" + chunk_key;
-        return fetch(apiString).then(response => response.json());
+        let apiString = this.settings.server + "/chunk/" + chunk_key;
+        const headers = this.getHeaders();
+        return fetch(apiString, {
+            headers: headers
+        }).then(response => response.json());
     }
 
 
@@ -181,8 +189,11 @@ class Synchronizator {
     getSettings() {
         this.percent = 50;
         this.updateWindow('Preparing a request');
-        let apiString = this.settings.server + "/" + this.settings.apikey + "/settings";
-        return fetch(apiString).then(response => {
+        let apiString = this.settings.server + "/settings";
+        const headers = this.getHeaders();
+        return fetch(apiString, {
+            headers: headers
+        }).then(response => {
             this.percent = 100;
             this.updateWindow('Response recieved!');
             return response.json()
@@ -192,14 +203,13 @@ class Synchronizator {
     postSettings(settings) {
         this.percent = 25;
         this.updateWindow('Preparing a request');
-        let apiString = this.settings.server + "/" + this.settings.apikey + "/settings";
+        let apiString = this.settings.server + "/settings";
         let d = JSON.stringify(settings);
+        const headers = this.getHeaders(true);
         return fetch(apiString, {
             method: 'POST',
             mode: 'cors',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: headers,
             body: d
         }).then(response => {
             this.percent = 100;
@@ -209,6 +219,14 @@ class Synchronizator {
     }
 
 
+    getHeaders(changeCall = false) {
+        const params = {};
+        params['Finance-Key'] = this.settings.apikey;
+        if (changeCall) {
+            params['Content-Type'] = 'application/json'
+        }
+        return params;
+    }
 
 
 
