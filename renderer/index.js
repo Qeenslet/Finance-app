@@ -59,7 +59,7 @@ ${categName} ${percent} <span class="badge badge-success">${roundAndFormat(balan
  * Drop content after changes before rendering
  */
 ipcRenderer.on('empty-categ', (event) => {
-    income = outcome = 0;
+    income = outcome = histIncome = histOut = 0;
     const bal = document.getElementById(categoryZone);
     bal.innerHTML = '';
     const bal2 = document.getElementById(categoryZone2);

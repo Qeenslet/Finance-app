@@ -172,7 +172,6 @@ async function renderMain(mainWindow, desiredDate = null) {
     if (m < 10) m = '0' + m;
     const theMonth = date.getFullYear() + '-' + m;
     const averegeData = await prepareStatisticData(desiredDate);
-    //TODO use averege calculations to display
     balance.then(res => {
         let sum = 0;
         const byCateg = {};
@@ -197,7 +196,7 @@ async function renderMain(mainWindow, desiredDate = null) {
         mainWindow.webContents.send('empty-categ');
         result.forEach(el => {
             let historic = 0;
-            let dd = date.getDate();
+            let dd = desiredDate ? '31' : date.getDate();
             if (averegeData[el.key] && averegeData[el.key][dd]) historic = averegeData[el.key][dd];
             mainWindow.webContents.send('categ', (el.amt * -1), el.name, el.key, theMonth, historic);
         });
