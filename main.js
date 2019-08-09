@@ -172,6 +172,7 @@ async function renderMain(mainWindow, desiredDate = null) {
     if (m < 10) m = '0' + m;
     const theMonth = date.getFullYear() + '-' + m;
     const averegeData = await prepareStatisticData(desiredDate);
+    //console.log(averegeData);
     balance.then(res => {
         let sum = 0;
         const byCateg = {};
@@ -202,7 +203,7 @@ async function renderMain(mainWindow, desiredDate = null) {
         });
         result2.forEach(el => {
             let historic = 0;
-            let dd = date.getDate();
+            let dd = desiredDate ? '31' : date.getDate();
             if (averegeData[el.key] && averegeData[el.key][dd]) historic = averegeData[el.key][dd];
             mainWindow.webContents.send('categ2', el.amt, el.name, el.key, theMonth, historic);
         });

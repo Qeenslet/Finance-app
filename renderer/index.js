@@ -34,7 +34,7 @@ ipcRenderer.on('categ', (event, balance, categName, categCode, theMonth, histori
     outcome += balance;
     histOut += historic;
     const total = document.getElementById('total_spents');
-    total.innerHTML = roundAndFormat(outcome) + '&nbsp;' + transformStatistics((outcome / (histOut / 100)) - 100, 'out');
+    total.innerHTML = roundAndFormat(outcome) + '&nbsp;' + transformStatistics((outcome / (histOut / 100)) - 100, 'out', false);
     bal.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center my-categs" style="cursor:pointer;" onclick="selectCateg('${categCode}', '${theMonth}')" id="list_categ_${categCode}">
 ${categName} ${percent} <span class="badge badge-warning">${roundAndFormat(balance)}</span>
 </li>`;
@@ -49,7 +49,7 @@ ipcRenderer.on('categ2', (event, balance, categName, categCode, theMonth, histor
     income += balance;
     histIncome += historic;
     const total = document.getElementById('total_incomes');
-    total.innerHTML = roundAndFormat(income) + '&nbsp;' + transformStatistics((income / (histIncome / 100)) - 100, 'in');
+    total.innerHTML = roundAndFormat(income) + '&nbsp;' + transformStatistics((income / (histIncome / 100)) - 100, 'in', false);
     //total.innerText = roundAndFormat(income);
     bal.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center my-categs" style="cursor:pointer;" onclick="selectCateg('${categCode}', '${theMonth}')" id="list_categ_${categCode}">
 ${categName} ${percent} <span class="badge badge-success">${roundAndFormat(balance)}</span>
@@ -190,17 +190,29 @@ function justRound(number) {
 }
 
 
-function transformStatistics(value, context) {
+function transformStatistics(value, context, small = true) {
     if (!value) return '';
     if (isFinite(value)) {
         value = Math.round(value);
         let combine = 'primary';
+        let color;
+        let symbol;
         if ((value > 0 && context === 'out') || (value < 0 && context === 'in')) {
             combine = 'danger';
+            color = 'red';
         } else if ((value < 0 && context === 'out') || (value > 0 && context === 'in')) {
             combine = 'success';
+            color = 'green';
         }
-        return `<span class="badge badge-pill badge-${combine}">${value} %</span>`;
+        if (!small) {
+            if (value > 0) value = '+' + value;
+            return `<span title="Percent" class="badge badge-pill badge-${combine}">${value} %</span>`;
+        } else {
+            symbol = value > 0 ? '&#9652;' : '&#9662;';
+            if (value > 0) value = '+' + value;
+            return `<span style="color: ${color}" title="${value}%">${symbol}</span>`
+        }
+
     }
     return '';
 }
