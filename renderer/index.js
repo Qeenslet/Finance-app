@@ -7,6 +7,8 @@ const categoryZone2 = 'incomesList';
 const allList = 'entry_list';
 let outcome = 0;
 let income = 0;
+let histIncome = 0;
+let histOut = 0;
 
 
 // create add todo window button
@@ -25,25 +27,32 @@ ipcRenderer.on('balance', (event, balance, month) => {
 /**
  * Display spents
  */
-ipcRenderer.on('categ', (event, balance, categName, categCode, theMonth) => {
+ipcRenderer.on('categ', (event, balance, categName, categCode, theMonth, historic) => {
     const bal = document.getElementById(categoryZone);
-    outcome += parseFloat(balance);
+    balance = parseFloat(balance);
+    let percent = transformStatistics((balance / (historic / 100)) - 100, 'out');
+    outcome += balance;
+    histOut += historic;
     const total = document.getElementById('total_spents');
-    total.innerText = roundAndFormat(outcome);
+    total.innerHTML = roundAndFormat(outcome) + '&nbsp;' + transformStatistics((outcome / (histOut / 100)) - 100, 'out');
     bal.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center my-categs" style="cursor:pointer;" onclick="selectCateg('${categCode}', '${theMonth}')" id="list_categ_${categCode}">
-${categName} <span class="badge badge-warning">${roundAndFormat(balance)}</span>
+${categName} ${percent} <span class="badge badge-warning">${roundAndFormat(balance)}</span>
 </li>`;
 });
 /**
  * Display incomes
  */
-ipcRenderer.on('categ2', (event, balance, categName, categCode, theMonth) => {
+ipcRenderer.on('categ2', (event, balance, categName, categCode, theMonth, historic) => {
     const bal = document.getElementById(categoryZone2);
-    income += parseFloat(balance);
+    balance = parseFloat(balance);
+    let percent = transformStatistics((balance / (historic / 100)) - 100, 'in');
+    income += balance;
+    histIncome += historic;
     const total = document.getElementById('total_incomes');
-    total.innerText = roundAndFormat(income);
+    total.innerHTML = roundAndFormat(income) + '&nbsp;' + transformStatistics((income / (histIncome / 100)) - 100, 'in');
+    //total.innerText = roundAndFormat(income);
     bal.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center my-categs" style="cursor:pointer;" onclick="selectCateg('${categCode}', '${theMonth}')" id="list_categ_${categCode}">
-${categName} <span class="badge badge-success">${roundAndFormat(balance)}</span>
+${categName} ${percent} <span class="badge badge-success">${roundAndFormat(balance)}</span>
 </li>`;
 });
 /**
@@ -135,7 +144,7 @@ function deleteEntry(entryID) {
  */
 const roundAndFormat = float => {
     if (float < 0) float *= -1;
-    return '$' + (Math.round(float * 100) / 100).toFixed(2);
+    return '$' + justRound(float);
 };
 
 const improvedFormat = float => {
@@ -174,4 +183,24 @@ function minProgramm() {
 
 function launchSettings() {
     ipcRenderer.send('settings');
+}
+
+function justRound(number) {
+    return (Math.round(number * 100) / 100).toFixed(2)
+}
+
+
+function transformStatistics(value, context) {
+    if (!value) return '';
+    if (isFinite(value)) {
+        value = Math.round(value);
+        let combine = 'primary';
+        if ((value > 0 && context === 'out') || (value < 0 && context === 'in')) {
+            combine = 'danger';
+        } else if ((value < 0 && context === 'out') || (value > 0 && context === 'in')) {
+            combine = 'success';
+        }
+        return `<span class="badge badge-pill badge-${combine}">${value} %</span>`;
+    }
+    return '';
 }

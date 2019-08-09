@@ -171,6 +171,8 @@ async function renderMain(mainWindow, desiredDate = null) {
     let m = parseInt(date.getMonth()) + 1;
     if (m < 10) m = '0' + m;
     const theMonth = date.getFullYear() + '-' + m;
+    const averegeData = await prepareStatisticData(desiredDate);
+    //TODO use averege calculations to display
     balance.then(res => {
         let sum = 0;
         const byCateg = {};
@@ -194,10 +196,16 @@ async function renderMain(mainWindow, desiredDate = null) {
         result2.sort((a, b) => (a.amt > b.amt) ? -1 : 1);
         mainWindow.webContents.send('empty-categ');
         result.forEach(el => {
-            mainWindow.webContents.send('categ', (el.amt * -1), el.name, el.key, theMonth);
+            let historic = 0;
+            let dd = date.getDate();
+            if (averegeData[el.key] && averegeData[el.key][dd]) historic = averegeData[el.key][dd];
+            mainWindow.webContents.send('categ', (el.amt * -1), el.name, el.key, theMonth, historic);
         });
         result2.forEach(el => {
-            mainWindow.webContents.send('categ2', el.amt, el.name, el.key, theMonth);
+            let historic = 0;
+            let dd = date.getDate();
+            if (averegeData[el.key] && averegeData[el.key][dd]) historic = averegeData[el.key][dd];
+            mainWindow.webContents.send('categ2', el.amt, el.name, el.key, theMonth, historic);
         });
     });
 
@@ -251,6 +259,45 @@ async function renderEntriesForCateg(mainWindow, category, desiredMonth) {
  */
  function showError(errorMessage) {
      dialog.showErrorBox("Application error", errorMessage);
+ }
+
+ function threeMonthsBefore(dateString = null) {
+     const date = dateString ? new Date(dateString) : new Date();
+     const result = [];
+     const endDate = splitDate(new Date(date.getFullYear(), date.getMonth(), 0));
+     date.setMonth(date.getMonth() - 3);
+     const startDate = splitDate(new Date(date.getFullYear(), date.getMonth(), 1));
+     return [startDate, endDate];
+ }
+
+ async function prepareStatisticData (date = null) {
+     const dates = threeMonthsBefore(date);
+     const res = await MyData.getBalanceInterval(dates[0], dates[1]);
+     const result = {};
+     const tempMonths = [];
+     res.forEach(entry => {
+         const d = new Date(entry.expense_date + ' 00:00:01');
+         let day = parseInt(d.getDate());
+         tempMonths.push(d.getMonth());
+         for (let i = 1; i < 32; i++) {
+             if (!result[entry.expense_categ]) result[entry.expense_categ] = {};
+             if (!result[entry.expense_categ][i]) result[entry.expense_categ][i] = 0;
+             let amt = parseFloat(entry.expense_sum);
+             if (amt < 0) amt *= -1;
+             if (day <= i)
+                 result[entry.expense_categ][i] += amt;
+         }
+     });
+     const set = new Set(tempMonths);
+     let avg = set.size;
+     if (avg && avg > 1) {
+         for (let k in result) {
+             for (let dd in result[k]) {
+                 result[k][dd] /= avg;
+             }
+         }
+     }
+     return result;
  }
 app.on('ready', main);
 
