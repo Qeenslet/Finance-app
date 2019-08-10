@@ -165,6 +165,7 @@ async function renderMain(mainWindow, desiredDate = null) {
     const categs = await mySettings.getExpenses();
     const incomes = await mySettings.getIncomes();
     const date = desiredDate ? new Date(desiredDate) : new Date();
+    const checkDate = new Date();
     const firstDate = splitDate(new Date(date.getFullYear(), date.getMonth(), 1));
     const lastDate = splitDate(new Date(date.getFullYear(), date.getMonth() + 1, 0));
     let balance = MyData.getBalanceInterval(firstDate, lastDate);
@@ -172,6 +173,7 @@ async function renderMain(mainWindow, desiredDate = null) {
     if (m < 10) m = '0' + m;
     const theMonth = date.getFullYear() + '-' + m;
     const averegeData = await prepareStatisticData(desiredDate);
+    mainWindow.webContents.send('empty-categ');
     //console.log(averegeData);
     balance.then(res => {
         let sum = 0;
@@ -194,16 +196,16 @@ async function renderMain(mainWindow, desiredDate = null) {
         }
         result.sort((a, b) => (a.amt > b.amt) ? 1 : -1);
         result2.sort((a, b) => (a.amt > b.amt) ? -1 : 1);
-        mainWindow.webContents.send('empty-categ');
+    
         result.forEach(el => {
             let historic = 0;
-            let dd = desiredDate ? '31' : date.getDate();
+            let dd = doubleChekDate(desiredDate, date, checkDate);
             if (averegeData[el.key] && averegeData[el.key][dd]) historic = averegeData[el.key][dd];
             mainWindow.webContents.send('categ', (el.amt * -1), el.name, el.key, theMonth, historic);
         });
         result2.forEach(el => {
             let historic = 0;
-            let dd = desiredDate ? '31' : date.getDate();
+            let dd = doubleChekDate(desiredDate, date, checkDate);
             if (averegeData[el.key] && averegeData[el.key][dd]) historic = averegeData[el.key][dd];
             mainWindow.webContents.send('categ2', el.amt, el.name, el.key, theMonth, historic);
         });
@@ -299,6 +301,21 @@ async function renderEntriesForCateg(mainWindow, category, desiredMonth) {
      }
      return result;
  }
+
+ function doubleChekDate(desiredDate, date, checkDate) {
+    let dd;
+    if (desiredDate) {
+        if (date.getMonth() === checkDate.getMonth()) {
+            dd = checkDate.getDate();
+        } else {
+            dd = '31';
+        }
+    } else {
+        dd = date.getDate();
+    }
+    return dd;
+ }
+
 app.on('ready', main);
 
 app.on('window-all-closed', function (){
