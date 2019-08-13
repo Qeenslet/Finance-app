@@ -182,6 +182,7 @@ async function renderMain(mainWindow, desiredDate = null) {
     const categs = await mySettings.getExpenses();
     const incomes = await mySettings.getIncomes();
     const date = desiredDate ? new Date(desiredDate) : new Date();
+    const checkDate = new Date();
     const firstDate = splitDate(new Date(date.getFullYear(), date.getMonth(), 1));
     const lastDate = splitDate(new Date(date.getFullYear(), date.getMonth() + 1, 0));
     let balance = MyData.getBalanceInterval(firstDate, lastDate);
@@ -192,7 +193,7 @@ async function renderMain(mainWindow, desiredDate = null) {
     const previous = {};
     previous.in = 0;
     previous.out = 0;
-    let dd = desiredDate ? '31' : date.getDate();
+    let dd = doubleChekDate(desiredDate, date, checkDate);
     for (const cat in averegeData) {
         if (categs[cat]) {
             if (averegeData[cat][dd])
@@ -326,6 +327,21 @@ async function renderEntriesForCateg(mainWindow, category, desiredMonth) {
      }
      return result;
  }
+
+ function doubleChekDate(desiredDate, date, checkDate) {
+    let dd;
+    if (desiredDate) {
+        if (date.getMonth() === checkDate.getMonth()) {
+            dd = checkDate.getDate();
+        } else {
+            dd = '31';
+        }
+    } else {
+        dd = date.getDate();
+    }
+    return dd;
+ }
+
 app.on('ready', main);
 
 app.on('window-all-closed', function (){
