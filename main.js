@@ -26,6 +26,7 @@ function main () {
     let addExpenseWin;
     let syncWindow;
     let setsWindow;
+    let aboutWindow;
     const date = new Date();
     const firstDate = splitDate(new Date(date.getFullYear(), date.getMonth(), 1));
     const lastDate = splitDate(new Date(date.getFullYear(), date.getMonth() + 1, 0));
@@ -153,6 +154,22 @@ function main () {
             });
         }
     });
+
+    ipcMain.on('about', event => {
+        if (!aboutWindow) {
+            aboutWindow = new Window({
+                file: path.join('renderer', 'about.html'),
+                width: 400,
+                height: 280,
+                // close with the main window
+                parent: mainWindow,
+                frame: false
+            });
+            aboutWindow.on('closed', () => {
+                aboutWindow = null;
+            });
+        }
+    });
 }
 
 /**
@@ -172,7 +189,19 @@ async function renderMain(mainWindow, desiredDate = null) {
     if (m < 10) m = '0' + m;
     const theMonth = date.getFullYear() + '-' + m;
     const averegeData = await prepareStatisticData(desiredDate);
-    //console.log(averegeData);
+    const previous = {};
+    previous.in = 0;
+    previous.out = 0;
+    let dd = desiredDate ? '31' : date.getDate();
+    for (const cat in averegeData) {
+        if (categs[cat]) {
+            if (averegeData[cat][dd])
+                previous.out += averegeData[cat][dd];
+        } else if (incomes[cat]) {
+            if (averegeData[cat][dd])
+                previous.in += averegeData[cat][dd];
+        }
+    }
     balance.then(res => {
         let sum = 0;
         const byCateg = {};
@@ -182,7 +211,7 @@ async function renderMain(mainWindow, desiredDate = null) {
             byCateg[elem.expense_categ] += parseFloat(elem.expense_sum);
         });
         mainWindow.webContents.send('all-list', res, categs, incomes);
-        mainWindow.webContents.send('balance', sum, theMonth);
+        mainWindow.webContents.send('balance', sum, theMonth, previous);
         const result = [];
         const result2 = [];
         for (const cat in byCateg) {
@@ -197,13 +226,11 @@ async function renderMain(mainWindow, desiredDate = null) {
         mainWindow.webContents.send('empty-categ');
         result.forEach(el => {
             let historic = 0;
-            let dd = desiredDate ? '31' : date.getDate();
             if (averegeData[el.key] && averegeData[el.key][dd]) historic = averegeData[el.key][dd];
             mainWindow.webContents.send('categ', (el.amt * -1), el.name, el.key, theMonth, historic);
         });
         result2.forEach(el => {
             let historic = 0;
-            let dd = desiredDate ? '31' : date.getDate();
             if (averegeData[el.key] && averegeData[el.key][dd]) historic = averegeData[el.key][dd];
             mainWindow.webContents.send('categ2', el.amt, el.name, el.key, theMonth, historic);
         });

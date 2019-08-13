@@ -1,6 +1,7 @@
 'use strict'
 
-const { BrowserWindow } = require('electron')
+const { BrowserWindow } = require('electron');
+const path = require('path');
 
 const defaultProps = {
     width: 1550,
@@ -9,7 +10,8 @@ const defaultProps = {
     webPreferences: {
         nodeIntegration: true
     },
-    frame: false
+    frame: false,
+    icon: path.join(__dirname, 'assets/icon.png')
 }
 
 class Window extends BrowserWindow {

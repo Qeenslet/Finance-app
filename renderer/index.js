@@ -18,11 +18,13 @@ document.getElementById('createTodoBtn').addEventListener('click', () => {
 /**
  * Display balance
  */
-ipcRenderer.on('balance', (event, balance, month) => {
+ipcRenderer.on('balance', (event, balance, month, previous) => {
     const bal = document.getElementById('monBal');
     bal.innerHTML = improvedFormat(balance);
     const selector = document.getElementById('monthSelector');
     selector.value = month;
+    histIncome = previous.in;
+    histOut = previous.out;
 });
 /**
  * Display spents
@@ -32,7 +34,6 @@ ipcRenderer.on('categ', (event, balance, categName, categCode, theMonth, histori
     balance = parseFloat(balance);
     let percent = transformStatistics((balance / (historic / 100)) - 100, 'out');
     outcome += balance;
-    histOut += historic;
     const total = document.getElementById('total_spents');
     total.innerHTML = roundAndFormat(outcome) + '&nbsp;' + transformStatistics((outcome / (histOut / 100)) - 100, 'out', false);
     bal.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center my-categs" style="cursor:pointer;" onclick="selectCateg('${categCode}', '${theMonth}')" id="list_categ_${categCode}">
@@ -47,7 +48,6 @@ ipcRenderer.on('categ2', (event, balance, categName, categCode, theMonth, histor
     balance = parseFloat(balance);
     let percent = transformStatistics((balance / (historic / 100)) - 100, 'in');
     income += balance;
-    histIncome += historic;
     const total = document.getElementById('total_incomes');
     total.innerHTML = roundAndFormat(income) + '&nbsp;' + transformStatistics((income / (histIncome / 100)) - 100, 'in', false);
     //total.innerText = roundAndFormat(income);
@@ -59,7 +59,7 @@ ${categName} ${percent} <span class="badge badge-success">${roundAndFormat(balan
  * Drop content after changes before rendering
  */
 ipcRenderer.on('empty-categ', (event) => {
-    income = outcome = histIncome = histOut = 0;
+    income = outcome = 0;
     const bal = document.getElementById(categoryZone);
     bal.innerHTML = '';
     const bal2 = document.getElementById(categoryZone2);
@@ -215,4 +215,8 @@ function transformStatistics(value, context, small = true) {
 
     }
     return '';
+}
+
+function showAbout() {
+    ipcRenderer.send('about');
 }
