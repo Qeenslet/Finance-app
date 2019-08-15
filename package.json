@@ -7,7 +7,8 @@
     "start": "electron .",
     "rebuild": "electron-rebuild -f -w sqlite3",
     "postinstall": "electron-builder install-app-deps",
-    "migrate": "node scripts/migration.js"
+    "migrate": "node scripts/migration.js",
+    "build-win": "electron-packager . FinanceApp --overwrite --asar --icon=assets/icon.ico --platform=win32 --arch=ia32 --prune=true"
   },
   "repository": "https://github.com/Qeenslet/Finance-app",
   "keywords": [
@@ -24,6 +25,7 @@
   "devDependencies": {
     "electron": "^5.0.5",
     "electron-builder": "^20.44.4",
+    "electron-packager": "^14.0.4",
     "electron-rebuild": "^1.8.5"
   }
 }
