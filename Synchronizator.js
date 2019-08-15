@@ -10,11 +10,11 @@ class Synchronizator {
     }
 
     syncronize() {
-        this.percent++;
+        this.percent = 0;
         this.updateWindow('Starting...');
         const rem = this.requestRemoteSummary();
         rem.then(remote => {
-            this.percent++;
+            this.percent = 10;
             this.updateWindow('Recieved response from remote server, looking for differences...');
             const loc = this.myData.getAllSum();
                 loc.then(local => {
@@ -55,14 +55,17 @@ class Synchronizator {
 
 
     uploadOperations() {
+        this.percent = 0;
         this.updateWindow('Preparing data for upload');
         const query = this.myData.getLastOperations();
+        this.percent = 10;
         query.then(rows => {
             if (rows && rows.length > 0) {
                 const send = this.sendOperationsToRemote(rows);
                 this.updateWindow('Uploading...');
                 send.then(response => {
                     if (response.chunk_key) {
+                        this.percent = 100;
                         this.updateWindow('Chunk key recieved, updating local data...');
                         const update = this.myData.setChunkKeys(response.chunk_key);
                         update.then(() => {
@@ -75,6 +78,7 @@ class Synchronizator {
                     }
                 })
             } else {
+                this.percent = 100;
                 this.updateWindow('No new entries to upload...');
                 this.updateWindow('Terminating...');
                 this.terminateUpdate();
@@ -169,7 +173,7 @@ class Synchronizator {
                 const proms = [];
                 bunch.forEach(operations => {
                     this.percent += step;
-                    if (this.percent >= 100) this.percent = 99;
+                    if (this.percent >= 100) this.percent = 100;
                     if (operations.operations) {
                         operations.operations.forEach(instruction => {
                             proms.push(this.myData.executeCommand(instruction));
