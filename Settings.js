@@ -109,12 +109,12 @@ class Settings {
 
 
     async applyRemoteSettings(settings) {
-        for (let i = 0; i < settings.length; i++) {
-            const set = await this.myData.getSetting(settings[i]['section_key'], settings[i]['setting_key']);
+        for (let i = 0; i < settings.settings.length; i++) {
+            const set = await this.myData.getSetting(settings.settings[i]['section_key'], settings.settings[i]['setting_key']);
             if (set) {
-                await this.myData.updateSetting(settings[i]['section_key'], settings[i]['setting_key'], settings[i]['setting_value']);
+                await this.myData.updateSetting(settings.settings[i]['section_key'], settings.settings[i]['setting_key'], settings.settings[i]['setting_value']);
             } else {
-                await this.myData.saveSetting(settings[i]['section_key'], settings[i]['setting_key'], settings[i]['setting_value']);
+                await this.myData.saveSetting(settings.settings[i]['section_key'], settings.settings[i]['setting_key'], settings.settings[i]['setting_value']);
             }
         }
     }
