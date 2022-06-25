@@ -20,7 +20,7 @@
   "author": "Qeenslet",
   "license": "CC0-1.0",
   "dependencies": {
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^2.6.7",
     "sqlite3": "^4.0.9"
   },
   "devDependencies": {
